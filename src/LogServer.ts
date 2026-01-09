@@ -46,8 +46,8 @@ type LogType = 'stderr' | 'stdout';
 
 type StreamClient = {
   excludes: string[];
+  includes: string[];
   isBrowser: boolean;
-  queries: string[];
   response: http.ServerResponse;
 };
 
@@ -132,7 +132,7 @@ export class LogServer {
           } else {
             // Non-browser (curl, etc): apply server-side filtering
             const filteredBuffer = sortedBuffer.filter((entry) =>
-              matchesFilters(entry.line, queries, excludes),
+              matchesFilters(entry.line, includes, excludes),
             );
 
             response.writeHead(200, {
@@ -151,8 +151,8 @@ export class LogServer {
           // Add to clients for streaming
           const client: StreamClient = {
             excludes,
+            includes,
             isBrowser,
-            queries,
             response,
           };
 
@@ -437,7 +437,7 @@ export class LogServer {
     const stripAnsi = (str) => str.replace(/\\u001B\\[[\\d;]*m/g, '');
     
     const globToRegex = (pattern) => {
-      const escaped = pattern.replace(/[.+?^${}()|[\\]\\\\]/g, '\\\\$&');
+      const escaped = pattern.replace(/([.+?^\${}()|[\\]\\\\])/g, '\\\\$1');
       const regexPattern = escaped.replace(/\\*/g, '.*');
       return new RegExp(regexPattern, 'i');
     };
@@ -467,7 +467,7 @@ export class LogServer {
       let result = html;
       for (const term of terms) {
         if (!term) continue;
-        const escaped = term.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&');
+        const escaped = term.replace(/([.*+?^\${}()|[\\]\\\\])/g, '\\\\$1');
         const regex = new RegExp('(?![^<]*>)(' + escaped + ')', 'gi');
         const cls = className ? ' class="' + className + '"' : '';
         result = result.replace(regex, '<mark' + cls + '>$1</mark>');
@@ -580,9 +580,7 @@ export class LogServer {
     html = highlightJson(html);
     html = linkifyUrls(html);
     const escaped = html.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
-    const raw = stripAnsi(line)
-      .replaceAll('\\', '\\\\')
-      .replaceAll("'", "\\'");
+    const raw = stripAnsi(line).replaceAll('\\', '\\\\').replaceAll("'", "\\'");
     return `<script>addLine('${escaped}', '${raw}')</script>\n`;
   }
 
@@ -601,7 +599,7 @@ export class LogServer {
         client.response.write(this.getHtmlLine(forWeb));
       } else {
         // Server-side filtering for non-browser clients
-        if (!matchesFilters(forWeb, client.queries, client.excludes)) {
+        if (!matchesFilters(forWeb, client.includes, client.excludes)) {
           continue;
         }
 

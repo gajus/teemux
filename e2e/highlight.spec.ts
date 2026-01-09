@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 import { runWithTeemux } from '../src/testing/runWithTeemux.js';
 
 test.describe('highlighting', () => {
