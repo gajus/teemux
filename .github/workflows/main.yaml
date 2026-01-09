@@ -22,6 +22,7 @@ jobs:
         with:
           version: 10
       - run: pnpm install
+      - run: pnpm exec playwright install
       - run: pnpm run lint:eslint
       - run: pnpm run lint:tsc
       - run: pnpm run lint:cspell

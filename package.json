@@ -25,7 +25,8 @@
       "mcolor",
       "mbright",
       "minfo",
-      "merror"
+      "merror",
+      "vitest"
     ]
   },
   "dependencies": {
