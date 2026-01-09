@@ -69,13 +69,13 @@ All process logs are aggregated at http://127.0.0.1:8336/
 curl http://127.0.0.1:8336/
 
 # View logs from a specific process
-curl "http://127.0.0.1:8336/?include=[api]"
+curl "http://127.0.0.1:8336/?include=api"
 
 # View only errors (using wildcard for case variations)
 curl "http://127.0.0.1:8336/?include=*error*,*Error*,*ERROR*"
 
 # View logs from api OR worker
-curl "http://127.0.0.1:8336/?include=[api],[worker]"
+curl "http://127.0.0.1:8336/?include=api,worker"
 
 # Exclude noisy logs (using wildcard)
 curl "http://127.0.0.1:8336/?exclude=health*,DEBUG"
@@ -95,13 +95,13 @@ Patterns support `*` as a wildcard (matches any characters):
 
 ```bash
 # Show only logs from the api process
-curl "http://127.0.0.1:8336/?include=[api]"
+curl "http://127.0.0.1:8336/?include=api"
 
 # Show only error logs (using wildcard)
 curl "http://127.0.0.1:8336/?include=*error*"
 
 # Show logs from api OR worker
-curl "http://127.0.0.1:8336/?include=[api],[worker]"
+curl "http://127.0.0.1:8336/?include=api,worker"
 
 # Hide healthcheck and ping logs
 curl "http://127.0.0.1:8336/?exclude=health*,ping"
@@ -110,10 +110,10 @@ curl "http://127.0.0.1:8336/?exclude=health*,ping"
 curl "http://127.0.0.1:8336/?include=*GET*/api*"
 
 # Show api logs but exclude verbose debug output
-curl "http://127.0.0.1:8336/?include=[api]&exclude=DEBUG,TRACE"
+curl "http://127.0.0.1:8336/?include=api&exclude=DEBUG,TRACE"
 
 # In browser
-open "http://127.0.0.1:8336/?include=[api]&exclude=health*"
+open "http://127.0.0.1:8336/?include=api&exclude=health*"
 ```
 
 Filters apply to both buffered logs and new incoming logs in real-time.
@@ -139,6 +139,10 @@ GET /health 200
 ```
 
 ## FAQ
+
+### What's the origin of the name?
+
+The name combines **tee** (the Unix command that duplicates output) and **mux** (multiplexer) – it multiplexes multiple log streams into one.
 
 ### How does teemux work?
 
