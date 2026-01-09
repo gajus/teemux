@@ -90,11 +90,11 @@ export class LogServer {
         // Handle streaming GET request
         if (request.method === 'GET' && request.url?.startsWith('/')) {
           const url = new URL(request.url, `http://${request.headers.host}`);
-          const queryParameter = url.searchParams.get('query');
-          const queries = queryParameter
-            ? queryParameter
+          const includeParameter = url.searchParams.get('include');
+          const includes = includeParameter
+            ? includeParameter
                 .split(',')
-                .map((query) => query.trim())
+                .map((term) => term.trim())
                 .filter(Boolean)
             : [];
           const excludeParameter = url.searchParams.get('exclude');
@@ -411,20 +411,20 @@ export class LogServer {
 </head>
 <body>
   <div id="filter-bar">
-    <label>Filter: <input type="text" id="query" placeholder="term1,term2 (AND)"></label>
+    <label>Include: <input type="text" id="include" placeholder="term1,term2 (OR)"></label>
     <label>Exclude: <input type="text" id="exclude" placeholder="pattern1,pattern2 (OR)"></label>
     <label>Highlight: <input type="text" id="highlight" placeholder="term1,term2"></label>
   </div>
   <div id="container"></div>
   <script>
     const container = document.getElementById('container');
-    const queryInput = document.getElementById('query');
+    const includeInput = document.getElementById('include');
     const excludeInput = document.getElementById('exclude');
     const highlightInput = document.getElementById('highlight');
     const params = new URLSearchParams(window.location.search);
     const tailSize = ${this.tailSize};
     
-    queryInput.value = params.get('query') || '';
+    includeInput.value = params.get('include') || '';
     excludeInput.value = params.get('exclude') || '';
     highlightInput.value = params.get('highlight') || '';
     
@@ -436,11 +436,11 @@ export class LogServer {
     
     const stripAnsi = (str) => str.replace(/\\u001B\\[[\\d;]*m/g, '');
     
-    const matchesFilters = (text, queries, excludes) => {
+    const matchesFilters = (text, includes, excludes) => {
       const plain = stripAnsi(text).toLowerCase();
-      if (queries.length > 0) {
-        const allMatch = queries.every(q => plain.includes(q.toLowerCase()));
-        if (!allMatch) return false;
+      if (includes.length > 0) {
+        const anyMatch = includes.some(t => plain.includes(t.toLowerCase()));
+        if (!anyMatch) return false;
       }
       if (excludes.length > 0) {
         const anyMatch = excludes.some(e => plain.includes(e.toLowerCase()));
@@ -463,7 +463,7 @@ export class LogServer {
     };
     
     const applyFilters = () => {
-      const queries = queryInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      const includes = includeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const excludes = excludeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const highlights = highlightInput.value.split(',').map(s => s.trim()).filter(Boolean);
       
@@ -471,14 +471,14 @@ export class LogServer {
         const id = line.dataset.id;
         const isPinned = pinnedIds.has(id);
         const text = line.dataset.raw;
-        const matches = matchesFilters(text, queries, excludes);
+        const matches = matchesFilters(text, includes, excludes);
         line.style.display = (matches || isPinned) ? '' : 'none';
         
         // Re-apply highlighting
         const contentEl = line.querySelector('.line-content');
         if (contentEl) {
           let html = line.dataset.html;
-          html = highlightTerms(html, queries, 'filter');
+          html = highlightTerms(html, includes, 'filter');
           html = highlightTerms(html, highlights);
           contentEl.innerHTML = html;
         }
@@ -486,7 +486,7 @@ export class LogServer {
       
       // Update URL without reload
       const newParams = new URLSearchParams();
-      if (queryInput.value) newParams.set('query', queryInput.value);
+      if (includeInput.value) newParams.set('include', includeInput.value);
       if (excludeInput.value) newParams.set('exclude', excludeInput.value);
       if (highlightInput.value) newParams.set('highlight', highlightInput.value);
       const newUrl = newParams.toString() ? '?' + newParams.toString() : window.location.pathname;
@@ -507,7 +507,7 @@ export class LogServer {
     let lineCounter = 0;
     const addLine = (html, raw) => {
       const id = 'line-' + (lineCounter++);
-      const queries = queryInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      const includes = includeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const excludes = excludeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const highlights = highlightInput.value.split(',').map(s => s.trim()).filter(Boolean);
       
@@ -518,7 +518,7 @@ export class LogServer {
       div.dataset.html = html;
       
       let displayHtml = html;
-      displayHtml = highlightTerms(displayHtml, queries, 'filter');
+      displayHtml = highlightTerms(displayHtml, includes, 'filter');
       displayHtml = highlightTerms(displayHtml, highlights);
       
       div.innerHTML = '<span class="line-content">' + displayHtml + '</span><span class="pin-btn" title="Pin">' + pinIcon + '</span>';
@@ -536,7 +536,7 @@ export class LogServer {
         applyFilters();
       });
       
-      const matches = matchesFilters(raw, queries, excludes);
+      const matches = matchesFilters(raw, includes, excludes);
       div.style.display = matches ? '' : 'none';
       
       container.appendChild(div);
@@ -555,7 +555,7 @@ export class LogServer {
       debounceTimer = setTimeout(fn, delay);
     };
     
-    queryInput.addEventListener('input', () => debounce(applyFilters, 50));
+    includeInput.addEventListener('input', () => debounce(applyFilters, 50));
     excludeInput.addEventListener('input', () => debounce(applyFilters, 50));
     highlightInput.addEventListener('input', () => debounce(applyFilters, 50));
   </script>

@@ -16,13 +16,13 @@ test.describe('filtering', () => {
     });
   });
 
-  test('filters logs by query parameter in URL', async ({ page }) => {
+  test('filters logs by include parameter in URL', async ({ page }) => {
     await runWithTeemux({}, async (ctx) => {
       await ctx.injectLog('app', 'INFO: application started');
       await ctx.injectLog('app', 'ERROR: something failed');
       await ctx.injectLog('app', 'DEBUG: some debug info');
 
-      await page.goto(`${ctx.url}?query=ERROR`, { waitUntil: 'commit' });
+      await page.goto(`${ctx.url}?include=ERROR`, { waitUntil: 'commit' });
 
       // Wait for all logs to be received (3 total, but only 1 visible)
       await expect(page.locator('.line')).toHaveCount(3);
@@ -34,18 +34,18 @@ test.describe('filtering', () => {
     });
   });
 
-  test('filters with multiple query terms (AND logic)', async ({ page }) => {
+  test('filters with multiple include terms (OR logic)', async ({ page }) => {
     await runWithTeemux({}, async (ctx) => {
       await ctx.injectLog('app', 'INFO: user logged in');
-      await ctx.injectLog('app', 'INFO: user logged out');
-      await ctx.injectLog('app', 'ERROR: user not found');
+      await ctx.injectLog('app', 'ERROR: system error');
+      await ctx.injectLog('app', 'DEBUG: something else');
 
-      await page.goto(`${ctx.url}?query=user,logged`, { waitUntil: 'commit' });
+      await page.goto(`${ctx.url}?include=INFO,ERROR`, { waitUntil: 'commit' });
 
       // Wait for all logs to be received
       await expect(page.locator('.line')).toHaveCount(3);
 
-      // Only lines with both "user" AND "logged" should be visible
+      // Lines with INFO OR ERROR should be visible (not DEBUG)
       const visibleLines = page.locator('.line:visible');
       await expect(visibleLines).toHaveCount(2);
     });
@@ -84,7 +84,7 @@ test.describe('filtering', () => {
       await expect(page.locator('.line')).toHaveCount(2);
 
       // Type in the filter input
-      await page.fill('#query', 'ERROR');
+      await page.fill('#include', 'ERROR');
 
       // Wait for filter to apply
       await page.waitForTimeout(100);
@@ -101,7 +101,7 @@ test.describe('filtering', () => {
       await ctx.injectLog('app', 'ERROR: something failed');
       await ctx.injectLog('app', 'error: lowercase error');
 
-      await page.goto(`${ctx.url}?query=error`, { waitUntil: 'commit' });
+      await page.goto(`${ctx.url}?include=error`, { waitUntil: 'commit' });
 
       // Wait for all logs to be received
       await expect(page.locator('.line')).toHaveCount(2);

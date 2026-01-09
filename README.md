@@ -4,7 +4,8 @@ Aggregate logs from multiple processes in a single view – in browser or termin
 
 ## Motivation
 
-Needed a simple way to give agents a unified view of all the logs.
+* Needed a simple way to browse logs aggregated across multiple processes.
+* Needed a simple way to give agents a unified view of all the logs.
 
 ## Install
 
@@ -54,33 +55,60 @@ curl http://127.0.0.1:8336/
 
 Plain text stream of all logs.
 
+### AGENTS.md
+
+If you want your coding agent to see the logs, simply add instructions to AGENTS.md to view the logs by running `curl http://127.0.0.1:8336/`. Example:
+
+````md
+## Viewing Logs
+
+All process logs are aggregated at http://127.0.0.1:8336/
+
+```bash
+# View all recent logs
+curl http://127.0.0.1:8336/
+
+# View logs from a specific process
+curl "http://127.0.0.1:8336/?include=[api]"
+
+# View only errors (any of these patterns)
+curl "http://127.0.0.1:8336/?include=error,Error,ERROR"
+
+# View logs from api OR worker
+curl "http://127.0.0.1:8336/?include=[api],[worker]"
+
+# Exclude noisy logs
+curl "http://127.0.0.1:8336/?exclude=healthcheck,DEBUG"
+```
+````
+
 ### Filtering Logs
 
 Use query parameters to filter logs:
 
 | Parameter | Logic | Description |
 |-----------|-------|-------------|
-| `query` | AND | Show lines containing **all** patterns |
-| `exclude` | OR | Hide lines containing **any** pattern |
+| `include` | OR | Show lines containing **any** of the patterns |
+| `exclude` | OR | Hide lines containing **any** of the patterns |
 
 ```bash
 # Show only logs from the api process
-curl "http://127.0.0.1:8336/?query=[api]"
+curl "http://127.0.0.1:8336/?include=[api]"
 
 # Show only error logs
-curl "http://127.0.0.1:8336/?query=[ERR]"
+curl "http://127.0.0.1:8336/?include=[ERR]"
 
-# Show api errors only (must contain both patterns)
-curl "http://127.0.0.1:8336/?query=[api],[ERR]"
+# Show logs from api OR worker
+curl "http://127.0.0.1:8336/?include=[api],[worker]"
 
 # Hide healthcheck and ping logs
 curl "http://127.0.0.1:8336/?exclude=healthcheck,ping"
 
 # Show api logs but exclude verbose debug output
-curl "http://127.0.0.1:8336/?query=[api]&exclude=DEBUG,TRACE"
+curl "http://127.0.0.1:8336/?include=[api]&exclude=DEBUG,TRACE"
 
 # In browser
-open "http://127.0.0.1:8336/?query=[api]&exclude=healthcheck"
+open "http://127.0.0.1:8336/?include=[api]&exclude=healthcheck"
 ```
 
 Filters apply to both buffered logs and new incoming logs in real-time.

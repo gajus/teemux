@@ -45,7 +45,7 @@ test.describe('highlighting', () => {
       await ctx.injectLog('app', 'ERROR: something failed');
       await ctx.injectLog('app', 'INFO: all good');
 
-      await page.goto(`${ctx.url}?query=ERROR`, { waitUntil: 'commit' });
+      await page.goto(`${ctx.url}?include=ERROR`, { waitUntil: 'commit' });
       await page.waitForSelector('.line');
 
       // Filter match should be highlighted with .filter class

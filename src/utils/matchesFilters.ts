@@ -4,24 +4,24 @@ import { stripAnsi } from './stripAnsi.js';
  * Check if a line matches the given filter criteria.
  *
  * @param line - The line to check (may contain ANSI codes)
- * @param queries - Terms that must ALL be present (AND logic), case-insensitive
+ * @param includes - Terms where ANY match includes the line (OR logic), case-insensitive
  * @param excludes - Terms where ANY match excludes the line (OR logic), case-insensitive
  * @returns true if the line should be included, false if filtered out
  */
 export const matchesFilters = (
   line: string,
-  queries: string[],
+  includes: string[],
   excludes: string[],
 ): boolean => {
   const plainText = stripAnsi(line).toLowerCase();
 
-  // All queries must match (AND logic) - case insensitive
-  if (queries.length > 0) {
-    const allQueriesMatch = queries.every((query) =>
-      plainText.includes(query.toLowerCase()),
+  // Any include must match (OR logic) - case insensitive
+  if (includes.length > 0) {
+    const anyIncludeMatches = includes.some((term) =>
+      plainText.includes(term.toLowerCase()),
     );
 
-    if (!allQueriesMatch) {
+    if (!anyIncludeMatches) {
       return false;
     }
   }

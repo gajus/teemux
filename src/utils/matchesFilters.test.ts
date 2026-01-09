@@ -12,23 +12,27 @@ describe('matchesFilters', () => {
     });
   });
 
-  describe('query filtering (AND logic)', () => {
-    it('matches when single query is present', () => {
+  describe('include filtering (OR logic)', () => {
+    it('matches when single include is present', () => {
       expect(matchesFilters('hello world', ['hello'], [])).toBe(true);
     });
 
-    it('does not match when single query is absent', () => {
+    it('does not match when single include is absent', () => {
       expect(matchesFilters('hello world', ['foo'], [])).toBe(false);
     });
 
-    it('matches when all queries are present', () => {
+    it('matches when any include is present', () => {
+      expect(matchesFilters('hello world', ['hello', 'foo'], [])).toBe(true);
+    });
+
+    it('matches when all includes are present', () => {
       expect(matchesFilters('hello world foo', ['hello', 'foo'], [])).toBe(
         true,
       );
     });
 
-    it('does not match when only some queries are present', () => {
-      expect(matchesFilters('hello world', ['hello', 'foo'], [])).toBe(false);
+    it('does not match when no includes are present', () => {
+      expect(matchesFilters('hello world', ['foo', 'bar'], [])).toBe(false);
     });
 
     it('is case insensitive', () => {
@@ -72,22 +76,22 @@ describe('matchesFilters', () => {
     });
   });
 
-  describe('combined query and exclude', () => {
-    it('includes when query matches and exclude does not', () => {
+  describe('combined include and exclude', () => {
+    it('includes when include matches and exclude does not', () => {
       expect(matchesFilters('info: success', ['info'], ['error'])).toBe(true);
     });
 
-    it('excludes when both query and exclude match', () => {
+    it('excludes when both include and exclude match', () => {
       expect(matchesFilters('error: info', ['info'], ['error'])).toBe(false);
     });
 
-    it('excludes when query does not match', () => {
+    it('excludes when include does not match', () => {
       expect(matchesFilters('hello world', ['foo'], ['bar'])).toBe(false);
     });
   });
 
   describe('with ANSI codes', () => {
-    it('ignores ANSI codes when matching queries', () => {
+    it('ignores ANSI codes when matching includes', () => {
       const line = '\u001B[31merror\u001B[0m: something failed';
       expect(matchesFilters(line, ['error'], [])).toBe(true);
     });
@@ -105,25 +109,28 @@ describe('matchesFilters', () => {
     it('handles complex colored output', () => {
       const line =
         '\u001B[90m[teemux]\u001B[0m \u001B[1;31mERROR\u001B[0m: Connection failed';
+      // OR logic: matches if error OR connection is present (both are)
       expect(matchesFilters(line, ['error', 'connection'], [])).toBe(true);
+      // Also matches with just one term present
+      expect(matchesFilters(line, ['error', 'foobar'], [])).toBe(true);
       expect(matchesFilters(line, [], ['error'])).toBe(false);
     });
   });
 
   describe('edge cases', () => {
-    it('handles empty queries array with excludes', () => {
+    it('handles empty includes array with excludes', () => {
       expect(matchesFilters('hello', [], ['foo'])).toBe(true);
     });
 
-    it('handles empty excludes array with queries', () => {
+    it('handles empty excludes array with includes', () => {
       expect(matchesFilters('hello', ['hello'], [])).toBe(true);
     });
 
-    it('handles whitespace in queries', () => {
+    it('handles whitespace in includes', () => {
       expect(matchesFilters('hello world', ['hello world'], [])).toBe(true);
     });
 
-    it('handles special regex characters in queries', () => {
+    it('handles special regex characters in includes', () => {
       expect(matchesFilters('price: $10.00', ['$10'], [])).toBe(true);
       expect(matchesFilters('path/to/file', ['path/to'], [])).toBe(true);
     });

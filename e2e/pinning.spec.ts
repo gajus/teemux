@@ -54,7 +54,7 @@ test.describe('pinning', () => {
       await expect(errorLine).toHaveClass(/pinned/);
 
       // Apply filter that would hide ERROR
-      await page.fill('#query', 'INFO');
+      await page.fill('#include', 'INFO');
       await page.waitForTimeout(100);
 
       // ERROR line should still be visible because it's pinned
@@ -80,7 +80,7 @@ test.describe('pinning', () => {
       await errorLine.locator('.pin-btn').click();
 
       // Filter to only show INFO
-      await page.fill('#query', 'INFO');
+      await page.fill('#include', 'INFO');
       await page.waitForTimeout(100);
 
       // Both should be visible (INFO matches, ERROR is pinned)
