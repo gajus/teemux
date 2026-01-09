@@ -140,6 +140,18 @@ GET /health 200
 
 ## FAQ
 
+### How does teemux work?
+
+teemux uses automatic leader discovery to coordinate log aggregation across multiple processes:
+
+1. **Leader Discovery**: When the first teemux process starts, it attempts to bind to the configured port (default 8336). If successful, it becomes the **leader** and starts the log aggregation server.
+
+2. **Client Registration**: When subsequent teemux processes start, they detect the port is already in use, verify a server is responding, and automatically become **clients** that forward their logs to the leader.
+
+3. **Leader Election**: If the leader process exits, clients detect this through periodic health checks (every 2 seconds). When a client detects the leader is gone, it attempts to become the new leader. Random jitter prevents multiple clients from racing to claim leadership simultaneously.
+
+This design requires no configuration – just run multiple `teemux` commands and they automatically coordinate.
+
 ### Docker output appears corrupted with strange spacing
 
 When running Docker with the `-t` flag, output may appear corrupted:

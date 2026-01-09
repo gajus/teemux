@@ -12,7 +12,12 @@ import { hideBin } from 'yargs/helpers';
 const getTimestamp = (): number => performance.timeOrigin + performance.now();
 
 const RESET = '\u001B[0m';
+const DIM = '\u001B[90m';
 const RED = '\u001B[91m';
+
+// Leader monitoring configuration
+const LEADER_CHECK_INTERVAL = 2_000; // Check every 2 seconds
+const MAX_PROMOTION_RETRIES = 3;
 
 type LogType = 'stderr' | 'stdout';
 
@@ -208,6 +213,95 @@ const waitForServer = async (
   return false;
 };
 
+const tryBecomeLeader = async (server: LogServer): Promise<boolean> => {
+  for (let attempt = 0; attempt < MAX_PROMOTION_RETRIES; attempt++) {
+    try {
+      await server.start();
+      return true;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EADDRINUSE') {
+        throw error;
+      }
+
+      // Check if another server took over
+      if (await checkServerReady(server.getPort())) {
+        // Another process became leader
+        return false;
+      }
+
+      // Port in use but server not responding - might be starting up
+      // Add random jitter to avoid thundering herd
+      const jitter = Math.random() * 100;
+
+      await sleep(50 + jitter);
+    }
+  }
+
+  return false;
+};
+
+const startLeaderMonitoring = (
+  server: LogServer,
+  port: number,
+): { stop: () => void } => {
+  let isRunning = true;
+  let timeoutId: null | ReturnType<typeof setTimeout> = null;
+
+  const checkAndPromote = async (): Promise<void> => {
+    if (!isRunning) {
+      return;
+    }
+
+    const serverAlive = await checkServerReady(port);
+
+    if (!serverAlive && isRunning) {
+      // Leader might be dead, try to become leader
+      // Add random jitter to prevent all clients from trying simultaneously
+      const jitter = Math.random() * 500;
+
+      await sleep(jitter);
+
+      // Double-check server is still down after jitter
+      if (isRunning && !(await checkServerReady(port))) {
+        const promoted = await tryBecomeLeader(server);
+
+        if (promoted) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `${DIM}[teemux] promoted to leader, now aggregating logs${RESET}`,
+          );
+          // Stop monitoring - we're now the leader
+          // eslint-disable-next-line require-atomic-updates -- safe: only modified here or in stop()
+          isRunning = false;
+          return;
+        }
+      }
+    }
+
+    // Schedule next check
+    if (isRunning) {
+      timeoutId = setTimeout(() => {
+        void checkAndPromote();
+      }, LEADER_CHECK_INTERVAL);
+    }
+  };
+
+  // Start monitoring after initial delay
+  timeoutId = setTimeout(() => {
+    void checkAndPromote();
+  }, LEADER_CHECK_INTERVAL);
+
+  return {
+    stop: () => {
+      isRunning = false;
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    },
+  };
+};
+
 const main = async (): Promise<void> => {
   const argv = await yargs(hideBin(process.argv))
     .env('TEEMUX')
@@ -276,7 +370,9 @@ const main = async (): Promise<void> => {
     }
   }
 
-  // If we're not the server, wait for it to be ready
+  // If we're not the server, wait for it to be ready and start monitoring
+  let leaderMonitor: null | { stop: () => void } = null;
+
   if (!isServer) {
     const serverReady = await waitForServer(port);
 
@@ -286,12 +382,18 @@ const main = async (): Promise<void> => {
         '[teemux] Could not connect to server. Is another instance running?',
       );
     }
+
+    // Start monitoring for leader failover
+    leaderMonitor = startLeaderMonitoring(server, port);
   }
 
   const client = new LogClient(name, port);
 
   // Run the process
   const exitCode = await runProcess(name, command, client);
+
+  // Stop leader monitoring if running
+  leaderMonitor?.stop();
 
   process.exit(exitCode);
 };
