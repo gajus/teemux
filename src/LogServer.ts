@@ -537,6 +537,11 @@ export class LogServer {
       if (highlightInput.value) newParams.set('highlight', highlightInput.value);
       const newUrl = newParams.toString() ? '?' + newParams.toString() : window.location.pathname;
       history.replaceState(null, '', newUrl);
+      
+      // Jump to bottom and resume tailing after filter change
+      container.scrollTop = container.scrollHeight;
+      tailing = true;
+      updateTailButton();
     };
     
     const trimBuffer = () => {
