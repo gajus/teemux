@@ -61,6 +61,7 @@ export const syntaxHighlightJson = (html: string): string => {
         result += html.slice(index);
         break;
       }
+
       result += html.slice(index, tagEnd + 1);
       index = tagEnd + 1;
     } else {
@@ -90,7 +91,7 @@ export const highlightJson = (html: string): string => {
   const unescaped = unescapeHtml(textContent);
 
   // Find where the actual log content starts (after the prefix like [name])
-  const prefixMatch = /^(\[[\w-]+\]\s*)/u.exec(unescaped);
+  const prefixMatch = /^\[[\w-]+\]\s*/u.exec(unescaped);
   const prefix = prefixMatch?.[0] ?? '';
   const content = unescaped.slice(prefix.length).trim();
 
@@ -107,7 +108,7 @@ export const highlightJson = (html: string): string => {
 
   // It's valid JSON - now highlight it
   // Find the position after the prefix span in the HTML
-  const prefixHtmlMatch = /^(<span[^>]*>\[[^\]]+\]<\/span>\s*)/u.exec(html);
+  const prefixHtmlMatch = /^<span[^>]*>\[[^\]]+\]<\/span>\s*/u.exec(html);
   const htmlPrefix = prefixHtmlMatch?.[0] ?? '';
   const jsonHtml = html.slice(htmlPrefix.length);
 

@@ -1,13 +1,12 @@
-import { expect, test } from '@playwright/test';
-
 import { runWithTeemux } from '../src/testing/runWithTeemux.js';
+import { expect, test } from '@playwright/test';
 
 test.describe('JSON highlighting', () => {
   test('highlights JSON keys', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', '{"name":"value"}');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', '{"name":"value"}');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Check for json-key class
@@ -17,10 +16,10 @@ test.describe('JSON highlighting', () => {
   });
 
   test('highlights JSON string values', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', '{"key":"string value"}');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', '{"key":"string value"}');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Check for json-string class
@@ -30,10 +29,10 @@ test.describe('JSON highlighting', () => {
   });
 
   test('highlights JSON numbers', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', '{"count":42}');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', '{"count":42}');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Check for json-number class
@@ -43,10 +42,10 @@ test.describe('JSON highlighting', () => {
   });
 
   test('highlights JSON booleans', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', '{"active":true,"disabled":false}');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', '{"active":true,"disabled":false}');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Check for json-bool class (true and false)
@@ -55,10 +54,10 @@ test.describe('JSON highlighting', () => {
   });
 
   test('highlights JSON null', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', '{"value":null}');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', '{"value":null}');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // null should have json-bool class
@@ -67,10 +66,10 @@ test.describe('JSON highlighting', () => {
   });
 
   test('does not highlight non-JSON text', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'This is plain text, not JSON');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'This is plain text, not JSON');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // No JSON highlighting classes should be present
@@ -81,13 +80,13 @@ test.describe('JSON highlighting', () => {
   });
 
   test('highlights complex nested JSON', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog(
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog(
         'app',
         '{"user":{"name":"John","age":30},"active":true}',
       );
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Should have multiple keys: user, name, age, active
@@ -106,10 +105,10 @@ test.describe('JSON highlighting', () => {
   });
 
   test('highlights JSON arrays', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', '[1, 2, 3]');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', '[1, 2, 3]');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Should have 3 numbers

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { stripAnsi } from './stripAnsi.js';
+import { describe, expect, it } from 'vitest';
 
 describe('stripAnsi', () => {
   it('returns plain text unchanged', () => {

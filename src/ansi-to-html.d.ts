@@ -1,12 +1,12 @@
 declare module 'ansi-to-html' {
-  interface Options {
+  type Options = {
     bg?: string;
     colors?: Record<number, string> | string[];
     escapeXML?: boolean;
     fg?: string;
     newline?: boolean;
     stream?: boolean;
-  }
+  };
 
   class Convert {
     constructor(options?: Options);

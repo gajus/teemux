@@ -1,13 +1,12 @@
-import { expect, test } from '@playwright/test';
-
 import { runWithTeemux } from '../src/testing/runWithTeemux.js';
+import { expect, test } from '@playwright/test';
 
 test.describe('URL linkification', () => {
   test('converts http URLs to clickable links', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Visit http://example.com for more info');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Visit http://example.com for more info');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Check for anchor tag
@@ -18,10 +17,10 @@ test.describe('URL linkification', () => {
   });
 
   test('converts https URLs to clickable links', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Secure site: https://example.com/path');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Secure site: https://example.com/path');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       const link = page.locator('a[href="https://example.com/path"]');
@@ -30,10 +29,10 @@ test.describe('URL linkification', () => {
   });
 
   test('converts file:// URLs to clickable links', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Open file:///Users/test/file.txt');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Open file:///Users/test/file.txt');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       const link = page.locator('a[href="file:///Users/test/file.txt"]');
@@ -42,10 +41,10 @@ test.describe('URL linkification', () => {
   });
 
   test('handles URLs with port numbers', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Server at http://localhost:3000/api');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Server at http://localhost:3000/api');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       const link = page.locator('a[href="http://localhost:3000/api"]');
@@ -54,10 +53,10 @@ test.describe('URL linkification', () => {
   });
 
   test('strips trailing punctuation from URLs', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Check http://example.com.');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Check http://example.com.');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // URL should not include the trailing period
@@ -67,10 +66,10 @@ test.describe('URL linkification', () => {
   });
 
   test('multiple URLs in one line', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'See http://a.com and http://b.com');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'See http://a.com and http://b.com');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       await expect(page.locator('a')).toHaveCount(2);

@@ -7,10 +7,10 @@ import { stripAnsi } from './stripAnsi.js';
  */
 const globToRegex = (pattern: string): RegExp => {
   // Escape regex special characters except *
-  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+  const escaped = pattern.replaceAll(/[$()+.?[\\\]^{|}]/gu, '\\$&');
   // Convert * to .*
-  const regexPattern = escaped.replace(/\*/g, '.*');
-  return new RegExp(regexPattern, 'i');
+  const regexPattern = escaped.replaceAll('*', '.*');
+  return new RegExp(regexPattern, 'iu');
 };
 
 /**
@@ -21,12 +21,12 @@ const matchesPattern = (text: string, pattern: string): boolean => {
   if (pattern.includes('*')) {
     return globToRegex(pattern).test(text);
   }
+
   return text.includes(pattern.toLowerCase());
 };
 
 /**
  * Check if a line matches the given filter criteria.
- *
  * @param line - The line to check (may contain ANSI codes)
  * @param includes - Patterns where ANY match includes the line (OR logic), case-insensitive. Supports * wildcards.
  * @param excludes - Patterns where ANY match excludes the line (OR logic), case-insensitive. Supports * wildcards.

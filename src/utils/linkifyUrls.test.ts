@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { linkifyUrls } from './linkifyUrls.js';
+import { describe, expect, it } from 'vitest';
 
 describe('linkifyUrls', () => {
   it('converts http URLs to links', () => {

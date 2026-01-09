@@ -1,15 +1,14 @@
-import { expect, test } from '@playwright/test';
-
 import { runWithTeemux } from '../src/testing/runWithTeemux.js';
+import { expect, test } from '@playwright/test';
 
 test.describe('filtering', () => {
   test('shows all logs when no filter is applied', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'INFO: application started');
-      await ctx.injectLog('app', 'ERROR: something failed');
-      await ctx.injectLog('app', 'DEBUG: some debug info');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'INFO: application started');
+      await context.injectLog('app', 'ERROR: something failed');
+      await context.injectLog('app', 'DEBUG: some debug info');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
 
       // Wait for logs to appear
       await expect(page.locator('.line')).toHaveCount(3);
@@ -17,12 +16,12 @@ test.describe('filtering', () => {
   });
 
   test('filters logs by include parameter in URL', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'INFO: application started');
-      await ctx.injectLog('app', 'ERROR: something failed');
-      await ctx.injectLog('app', 'DEBUG: some debug info');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'INFO: application started');
+      await context.injectLog('app', 'ERROR: something failed');
+      await context.injectLog('app', 'DEBUG: some debug info');
 
-      await page.goto(`${ctx.url}?include=ERROR`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?include=ERROR`, { waitUntil: 'commit' });
 
       // Wait for all logs to be received (3 total, but only 1 visible)
       await expect(page.locator('.line')).toHaveCount(3);
@@ -35,12 +34,14 @@ test.describe('filtering', () => {
   });
 
   test('filters with multiple include terms (OR logic)', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'INFO: user logged in');
-      await ctx.injectLog('app', 'ERROR: system error');
-      await ctx.injectLog('app', 'DEBUG: something else');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'INFO: user logged in');
+      await context.injectLog('app', 'ERROR: system error');
+      await context.injectLog('app', 'DEBUG: something else');
 
-      await page.goto(`${ctx.url}?include=INFO,ERROR`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?include=INFO,ERROR`, {
+        waitUntil: 'commit',
+      });
 
       // Wait for all logs to be received
       await expect(page.locator('.line')).toHaveCount(3);
@@ -52,12 +53,12 @@ test.describe('filtering', () => {
   });
 
   test('excludes logs by exclude parameter', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'INFO: application started');
-      await ctx.injectLog('app', 'ERROR: something failed');
-      await ctx.injectLog('app', 'DEBUG: verbose output');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'INFO: application started');
+      await context.injectLog('app', 'ERROR: something failed');
+      await context.injectLog('app', 'DEBUG: verbose output');
 
-      await page.goto(`${ctx.url}?exclude=DEBUG`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?exclude=DEBUG`, { waitUntil: 'commit' });
 
       // Wait for all logs to be received
       await expect(page.locator('.line')).toHaveCount(3);
@@ -74,11 +75,11 @@ test.describe('filtering', () => {
   });
 
   test('filters using the UI input field', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'INFO: application started');
-      await ctx.injectLog('app', 'ERROR: something failed');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'INFO: application started');
+      await context.injectLog('app', 'ERROR: something failed');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
 
       // Wait for logs to appear
       await expect(page.locator('.line')).toHaveCount(2);
@@ -97,11 +98,11 @@ test.describe('filtering', () => {
   });
 
   test('filter is case insensitive', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'ERROR: something failed');
-      await ctx.injectLog('app', 'error: lowercase error');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'ERROR: something failed');
+      await context.injectLog('app', 'error: lowercase error');
 
-      await page.goto(`${ctx.url}?include=error`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?include=error`, { waitUntil: 'commit' });
 
       // Wait for all logs to be received
       await expect(page.locator('.line')).toHaveCount(2);

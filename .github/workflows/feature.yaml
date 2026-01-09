@@ -11,7 +11,7 @@ jobs:
       - name: setup node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "24"
+          node-version: '24'
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -35,7 +35,7 @@ jobs:
       - name: setup node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "24"
+          node-version: '24'
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:

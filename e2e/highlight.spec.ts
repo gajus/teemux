@@ -1,12 +1,14 @@
-import { expect, test } from '@playwright/test';
 import { runWithTeemux } from '../src/testing/runWithTeemux.js';
+import { expect, test } from '@playwright/test';
 
 test.describe('highlighting', () => {
   test('highlights terms from highlight parameter', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'This message contains ERROR in it');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'This message contains ERROR in it');
 
-      await page.goto(`${ctx.url}?highlight=ERROR`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?highlight=ERROR`, {
+        waitUntil: 'commit',
+      });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Check for mark element
@@ -16,10 +18,12 @@ test.describe('highlighting', () => {
   });
 
   test('highlights multiple terms', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'User logged in successfully');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'User logged in successfully');
 
-      await page.goto(`${ctx.url}?highlight=User,logged`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?highlight=User,logged`, {
+        waitUntil: 'commit',
+      });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Should have 2 highlighted terms
@@ -28,10 +32,12 @@ test.describe('highlighting', () => {
   });
 
   test('highlight is case insensitive', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'ERROR occurred');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'ERROR occurred');
 
-      await page.goto(`${ctx.url}?highlight=error`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?highlight=error`, {
+        waitUntil: 'commit',
+      });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Should still highlight ERROR even though we searched for error
@@ -40,11 +46,11 @@ test.describe('highlighting', () => {
   });
 
   test('filter matches are highlighted with filter class', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'ERROR: something failed');
-      await ctx.injectLog('app', 'INFO: all good');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'ERROR: something failed');
+      await context.injectLog('app', 'INFO: all good');
 
-      await page.goto(`${ctx.url}?include=ERROR`, { waitUntil: 'commit' });
+      await page.goto(`${context.url}?include=ERROR`, { waitUntil: 'commit' });
       await page.waitForSelector('.line');
 
       // Filter match should be highlighted with .filter class
@@ -54,10 +60,10 @@ test.describe('highlighting', () => {
   });
 
   test('highlight input updates highlighting dynamically', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Test message with keyword');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Test message with keyword');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // No highlights initially

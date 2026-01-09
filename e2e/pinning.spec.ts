@@ -1,32 +1,31 @@
-import { expect, test } from '@playwright/test';
-
 import { runWithTeemux } from '../src/testing/runWithTeemux.js';
+import { expect, test } from '@playwright/test';
 
 test.describe('pinning', () => {
   test('pin button appears on hover', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Test log message');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Test log message');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Pin button should be hidden by default
-      const pinBtn = page.locator('.pin-btn').first();
-      await expect(pinBtn).toHaveCSS('opacity', '0');
+      const pinButton = page.locator('.pin-btn').first();
+      await expect(pinButton).toHaveCSS('opacity', '0');
 
       // Hover over the line
       await page.locator('.line').first().hover();
 
       // Pin button should become visible
-      await expect(pinBtn).not.toHaveCSS('opacity', '0');
+      await expect(pinButton).not.toHaveCSS('opacity', '0');
     });
   });
 
   test('clicking pin button pins the line', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'Important message');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'Important message');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(1);
 
       // Click the pin button
@@ -34,24 +33,24 @@ test.describe('pinning', () => {
       await page.locator('.pin-btn').first().click();
 
       // Line should have pinned class
-      await expect(page.locator('.line').first()).toHaveClass(/pinned/);
+      await expect(page.locator('.line').first()).toHaveClass(/pinned/u);
     });
   });
 
   test('pinned lines remain visible when filtered out', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'INFO: should be hidden');
-      await ctx.injectLog('app', 'ERROR: should stay visible');
-      await ctx.injectLog('app', 'DEBUG: should be hidden');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'INFO: should be hidden');
+      await context.injectLog('app', 'ERROR: should stay visible');
+      await context.injectLog('app', 'DEBUG: should be hidden');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(3);
 
       // Pin the ERROR line (second line)
       const errorLine = page.locator('.line').nth(1);
       await errorLine.hover();
       await errorLine.locator('.pin-btn').click();
-      await expect(errorLine).toHaveClass(/pinned/);
+      await expect(errorLine).toHaveClass(/pinned/u);
 
       // Apply filter that would hide ERROR
       await page.fill('#include', 'INFO');
@@ -67,11 +66,11 @@ test.describe('pinning', () => {
   });
 
   test('unpinning a line respects current filter', async ({ page }) => {
-    await runWithTeemux({}, async (ctx) => {
-      await ctx.injectLog('app', 'INFO: message');
-      await ctx.injectLog('app', 'ERROR: message');
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'INFO: message');
+      await context.injectLog('app', 'ERROR: message');
 
-      await page.goto(ctx.url, { waitUntil: 'commit' });
+      await page.goto(context.url, { waitUntil: 'commit' });
       await expect(page.locator('.line')).toHaveCount(2);
 
       // Pin ERROR line

@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import {
   highlightJson,
   highlightJsonText,
   syntaxHighlightJson,
 } from './highlightJson.js';
+import { describe, expect, it } from 'vitest';
 
 describe('highlightJsonText', () => {
   it('highlights string keys', () => {
@@ -103,9 +103,7 @@ describe('highlightJsonText', () => {
     const input = '{&quot;empty&quot;:&quot;&quot;}';
     const result = highlightJsonText(input);
 
-    expect(result).toContain(
-      '<span class="json-string">&quot;&quot;</span>',
-    );
+    expect(result).toContain('<span class="json-string">&quot;&quot;</span>');
   });
 
   it('handles arrays', () => {
@@ -151,9 +149,7 @@ describe('highlightJson', () => {
     expect(result).toContain(
       '<span class="json-key">&quot;status&quot;</span>',
     );
-    expect(result).toContain(
-      '<span class="json-string">&quot;ok&quot;</span>',
-    );
+    expect(result).toContain('<span class="json-string">&quot;ok&quot;</span>');
   });
 
   it('returns original HTML for non-JSON content', () => {
@@ -183,21 +179,18 @@ describe('highlightJson', () => {
     const input = '{&quot;direct&quot;:true}';
     const result = highlightJson(input);
 
-    expect(result).toContain('<span class="json-key">&quot;direct&quot;</span>');
+    expect(result).toContain(
+      '<span class="json-key">&quot;direct&quot;</span>',
+    );
     expect(result).toContain('<span class="json-bool">true</span>');
   });
 
   it('handles nested JSON objects', () => {
-    const input =
-      '{&quot;outer&quot;:{&quot;inner&quot;:&quot;value&quot;}}';
+    const input = '{&quot;outer&quot;:{&quot;inner&quot;:&quot;value&quot;}}';
     const result = highlightJson(input);
 
-    expect(result).toContain(
-      '<span class="json-key">&quot;outer&quot;</span>',
-    );
-    expect(result).toContain(
-      '<span class="json-key">&quot;inner&quot;</span>',
-    );
+    expect(result).toContain('<span class="json-key">&quot;outer&quot;</span>');
+    expect(result).toContain('<span class="json-key">&quot;inner&quot;</span>');
     expect(result).toContain(
       '<span class="json-string">&quot;value&quot;</span>',
     );
