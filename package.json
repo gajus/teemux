@@ -4,6 +4,9 @@
     "name": "Gajus Kuizinas",
     "url": "https://gajus.com"
   },
+  "bin": {
+    "teemux": "./dist/teemux.js"
+  },
   "cspell": {
     "words": [
       "teemux",
@@ -24,9 +27,6 @@
       "minfo",
       "merror"
     ]
-  },
-  "bin": {
-    "teemux": "./dist/teemux.js"
   },
   "dependencies": {
     "ansi-to-html": "^0.7.2",
