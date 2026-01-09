@@ -1,11 +1,35 @@
 import { stripAnsi } from './stripAnsi.js';
 
 /**
+ * Convert a glob pattern (with * wildcards) to a RegExp.
+ * - `*` matches any characters (zero or more)
+ * - All other characters are escaped for literal matching
+ */
+const globToRegex = (pattern: string): RegExp => {
+  // Escape regex special characters except *
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+  // Convert * to .*
+  const regexPattern = escaped.replace(/\*/g, '.*');
+  return new RegExp(regexPattern, 'i');
+};
+
+/**
+ * Check if text matches a pattern (supports * glob wildcards).
+ * If no wildcards, does a simple substring match for better performance.
+ */
+const matchesPattern = (text: string, pattern: string): boolean => {
+  if (pattern.includes('*')) {
+    return globToRegex(pattern).test(text);
+  }
+  return text.includes(pattern.toLowerCase());
+};
+
+/**
  * Check if a line matches the given filter criteria.
  *
  * @param line - The line to check (may contain ANSI codes)
- * @param includes - Terms where ANY match includes the line (OR logic), case-insensitive
- * @param excludes - Terms where ANY match excludes the line (OR logic), case-insensitive
+ * @param includes - Patterns where ANY match includes the line (OR logic), case-insensitive. Supports * wildcards.
+ * @param excludes - Patterns where ANY match excludes the line (OR logic), case-insensitive. Supports * wildcards.
  * @returns true if the line should be included, false if filtered out
  */
 export const matchesFilters = (
@@ -17,8 +41,8 @@ export const matchesFilters = (
 
   // Any include must match (OR logic) - case insensitive
   if (includes.length > 0) {
-    const anyIncludeMatches = includes.some((term) =>
-      plainText.includes(term.toLowerCase()),
+    const anyIncludeMatches = includes.some((pattern) =>
+      matchesPattern(plainText, pattern),
     );
 
     if (!anyIncludeMatches) {
@@ -29,7 +53,7 @@ export const matchesFilters = (
   // None of the excludes should match (OR logic for exclusion) - case insensitive
   if (excludes.length > 0) {
     const anyExcludeMatches = excludes.some((pattern) =>
-      plainText.includes(pattern.toLowerCase()),
+      matchesPattern(plainText, pattern),
     );
 
     if (anyExcludeMatches) {

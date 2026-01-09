@@ -411,8 +411,8 @@ export class LogServer {
 </head>
 <body>
   <div id="filter-bar">
-    <label>Include: <input type="text" id="include" placeholder="term1,term2 (OR)"></label>
-    <label>Exclude: <input type="text" id="exclude" placeholder="pattern1,pattern2 (OR)"></label>
+    <label>Include: <input type="text" id="include" placeholder="error*,warn* (OR, * = wildcard)"></label>
+    <label>Exclude: <input type="text" id="exclude" placeholder="health*,debug (OR, * = wildcard)"></label>
     <label>Highlight: <input type="text" id="highlight" placeholder="term1,term2"></label>
   </div>
   <div id="container"></div>
@@ -436,14 +436,27 @@ export class LogServer {
     
     const stripAnsi = (str) => str.replace(/\\u001B\\[[\\d;]*m/g, '');
     
+    const globToRegex = (pattern) => {
+      const escaped = pattern.replace(/[.+?^${}()|[\\]\\\\]/g, '\\\\$&');
+      const regexPattern = escaped.replace(/\\*/g, '.*');
+      return new RegExp(regexPattern, 'i');
+    };
+    
+    const matchesPattern = (text, pattern) => {
+      if (pattern.includes('*')) {
+        return globToRegex(pattern).test(text);
+      }
+      return text.includes(pattern.toLowerCase());
+    };
+    
     const matchesFilters = (text, includes, excludes) => {
       const plain = stripAnsi(text).toLowerCase();
       if (includes.length > 0) {
-        const anyMatch = includes.some(t => plain.includes(t.toLowerCase()));
+        const anyMatch = includes.some(p => matchesPattern(plain, p));
         if (!anyMatch) return false;
       }
       if (excludes.length > 0) {
-        const anyMatch = excludes.some(e => plain.includes(e.toLowerCase()));
+        const anyMatch = excludes.some(p => matchesPattern(plain, p));
         if (anyMatch) return false;
       }
       return true;

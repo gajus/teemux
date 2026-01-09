@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { matchesFilters } from './matchesFilters.js';
+import { describe, expect, it } from 'vitest';
 
 describe('matchesFilters', () => {
   describe('with no filters', () => {
@@ -114,6 +114,67 @@ describe('matchesFilters', () => {
       // Also matches with just one term present
       expect(matchesFilters(line, ['error', 'foobar'], [])).toBe(true);
       expect(matchesFilters(line, [], ['error'])).toBe(false);
+    });
+  });
+
+  describe('glob patterns with *', () => {
+    it('matches with * at the end', () => {
+      expect(matchesFilters('error: something failed', ['error*'], [])).toBe(
+        true,
+      );
+      expect(matchesFilters('info: all good', ['error*'], [])).toBe(false);
+    });
+
+    it('matches with * at the start', () => {
+      expect(matchesFilters('request failed', ['*failed'], [])).toBe(true);
+      expect(matchesFilters('request succeeded', ['*failed'], [])).toBe(false);
+    });
+
+    it('matches with * in the middle', () => {
+      expect(matchesFilters('[api] error occurred', ['[api]*error'], [])).toBe(
+        true,
+      );
+      expect(
+        matchesFilters('[worker] error occurred', ['[api]*error'], []),
+      ).toBe(false);
+    });
+
+    it('matches with multiple *', () => {
+      expect(matchesFilters('[api] GET /users 200', ['*GET*/users*'], [])).toBe(
+        true,
+      );
+      expect(
+        matchesFilters('[api] POST /users 201', ['*GET*/users*'], []),
+      ).toBe(false);
+    });
+
+    it('matches * as any characters (including empty)', () => {
+      expect(matchesFilters('error', ['error*'], [])).toBe(true);
+      expect(matchesFilters('error:', ['error*'], [])).toBe(true);
+      expect(matchesFilters('error: failed', ['error*'], [])).toBe(true);
+    });
+
+    it('is case insensitive with globs', () => {
+      expect(matchesFilters('ERROR: failed', ['error*'], [])).toBe(true);
+      expect(matchesFilters('error: FAILED', ['*FAILED'], [])).toBe(true);
+    });
+
+    it('works with excludes', () => {
+      expect(matchesFilters('healthcheck OK', [], ['health*'])).toBe(false);
+      expect(matchesFilters('error occurred', [], ['health*'])).toBe(true);
+    });
+
+    it('escapes regex special characters in glob patterns', () => {
+      // . is escaped (literal), so file.* matches "file." followed by anything
+      expect(matchesFilters('file.txt', ['file.*'], [])).toBe(true);
+      expect(matchesFilters('file_txt', ['file.*'], [])).toBe(false); // no literal . in text
+      expect(matchesFilters('price: $10.00', ['$10*'], [])).toBe(true);
+      expect(matchesFilters('[api] log', ['[api]*'], [])).toBe(true);
+    });
+
+    it('handles pattern with only *', () => {
+      expect(matchesFilters('anything', ['*'], [])).toBe(true);
+      expect(matchesFilters('', ['*'], [])).toBe(true);
     });
   });
 

@@ -71,14 +71,14 @@ curl http://127.0.0.1:8336/
 # View logs from a specific process
 curl "http://127.0.0.1:8336/?include=[api]"
 
-# View only errors (any of these patterns)
-curl "http://127.0.0.1:8336/?include=error,Error,ERROR"
+# View only errors (using wildcard for case variations)
+curl "http://127.0.0.1:8336/?include=*error*,*Error*,*ERROR*"
 
 # View logs from api OR worker
 curl "http://127.0.0.1:8336/?include=[api],[worker]"
 
-# Exclude noisy logs
-curl "http://127.0.0.1:8336/?exclude=healthcheck,DEBUG"
+# Exclude noisy logs (using wildcard)
+curl "http://127.0.0.1:8336/?exclude=health*,DEBUG"
 ```
 ````
 
@@ -88,27 +88,32 @@ Use query parameters to filter logs:
 
 | Parameter | Logic | Description |
 |-----------|-------|-------------|
-| `include` | OR | Show lines containing **any** of the patterns |
-| `exclude` | OR | Hide lines containing **any** of the patterns |
+| `include` | OR | Show lines matching **any** of the patterns |
+| `exclude` | OR | Hide lines matching **any** of the patterns |
+
+Patterns support `*` as a wildcard (matches any characters):
 
 ```bash
 # Show only logs from the api process
 curl "http://127.0.0.1:8336/?include=[api]"
 
-# Show only error logs
-curl "http://127.0.0.1:8336/?include=[ERR]"
+# Show only error logs (using wildcard)
+curl "http://127.0.0.1:8336/?include=*error*"
 
 # Show logs from api OR worker
 curl "http://127.0.0.1:8336/?include=[api],[worker]"
 
 # Hide healthcheck and ping logs
-curl "http://127.0.0.1:8336/?exclude=healthcheck,ping"
+curl "http://127.0.0.1:8336/?exclude=health*,ping"
+
+# Show GET requests to /api endpoints
+curl "http://127.0.0.1:8336/?include=*GET*/api*"
 
 # Show api logs but exclude verbose debug output
 curl "http://127.0.0.1:8336/?include=[api]&exclude=DEBUG,TRACE"
 
 # In browser
-open "http://127.0.0.1:8336/?include=[api]&exclude=healthcheck"
+open "http://127.0.0.1:8336/?include=[api]&exclude=health*"
 ```
 
 Filters apply to both buffered logs and new incoming logs in real-time.
