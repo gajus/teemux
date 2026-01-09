@@ -1,0 +1,49 @@
+jobs:
+  lint:
+    environment: release
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: setup node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "24"
+      - run: npm ci
+      - run: npm run lint:eslint
+      - run: npm run lint:tsc
+      - run: npm run lint:cspell
+    timeout-minutes: 10
+  test:
+    environment: release
+    name: Test
+    needs:
+      - lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: setup node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "24"
+      - run: npm ci
+      - run: npm run test:vitest
+      - run: npm run test:playwright
+      - run: npm run build
+    timeout-minutes: 10
+name: Test and build
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review

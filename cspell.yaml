@@ -1,0 +1,9 @@
+ignoreRegExpList:
+  - /.*[0-9].*/
+language: en
+version: '0.2'
+words:
+  - gajus
+  - kuizinas
+  - vitest
+  - hdinf

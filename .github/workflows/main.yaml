@@ -1,0 +1,29 @@
+jobs:
+  test:
+    environment: release
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: setup node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "24"
+      - run: npm ci
+      - run: npm run lint:eslint
+      - run: npm run lint:tsc
+      - run: npm run lint:cspell
+      - run: npm run test:vitest
+      - run: npm run test:playwright
+      - run: npm run build
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+name: Test, build and release
+on:
+  push:
+    branches:
+      - main
