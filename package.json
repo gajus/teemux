@@ -4,6 +4,27 @@
     "name": "Gajus Kuizinas",
     "url": "https://gajus.com"
   },
+  "cspell": {
+    "words": [
+      "teemux",
+      "linkify",
+      "linkified",
+      "linkification",
+      "nosniff",
+      "noopener",
+      "Inconsolata",
+      "Fira",
+      "healthcheck",
+      "mred",
+      "mgreen",
+      "mbold",
+      "mdim",
+      "mcolor",
+      "mbright",
+      "minfo",
+      "merror"
+    ]
+  },
   "bin": {
     "teemux": "./dist/teemux.js"
   },
