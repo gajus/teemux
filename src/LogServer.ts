@@ -407,6 +407,30 @@ export class LogServer {
     .json-number { color: #b5cea8; }
     .json-bool { color: #569cd6; }
     .json-null { color: #569cd6; }
+    #tail-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #007acc;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: background 0.15s;
+    }
+    #tail-btn:hover {
+      background: #0098ff;
+    }
+    #tail-btn svg {
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -416,11 +440,16 @@ export class LogServer {
     <label>Highlight: <input type="text" id="highlight" placeholder="term1,term2"></label>
   </div>
   <div id="container"></div>
+  <button id="tail-btn" title="Jump to bottom and follow new logs">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+    Tail
+  </button>
   <script>
     const container = document.getElementById('container');
     const includeInput = document.getElementById('include');
     const excludeInput = document.getElementById('exclude');
     const highlightInput = document.getElementById('highlight');
+    const tailBtn = document.getElementById('tail-btn');
     const params = new URLSearchParams(window.location.search);
     const tailSize = ${this.tailSize};
     
@@ -430,6 +459,10 @@ export class LogServer {
     
     let tailing = true;
     let pinnedIds = new Set();
+    
+    const updateTailButton = () => {
+      tailBtn.style.display = tailing ? 'none' : 'flex';
+    };
     
     // Lucide pin icon SVG
     const pinIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
@@ -560,6 +593,13 @@ export class LogServer {
     container.addEventListener('scroll', () => {
       const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
       tailing = atBottom;
+      updateTailButton();
+    });
+    
+    tailBtn.addEventListener('click', () => {
+      container.scrollTop = container.scrollHeight;
+      tailing = true;
+      updateTailButton();
     });
     
     let debounceTimer;
