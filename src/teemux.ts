@@ -346,10 +346,10 @@ const main = async (): Promise<void> => {
       description: 'Port for the log aggregation server',
       type: 'number',
     })
-    .option('tail', {
-      alias: 't',
-      default: 1_000,
-      description: 'Number of log lines to keep in buffer',
+    .option('buffer', {
+      alias: 'b',
+      default: 10_000,
+      description: 'Number of log lines to keep in server buffer',
       type: 'number',
     })
     .help()
@@ -368,7 +368,7 @@ const main = async (): Promise<void> => {
   const name = argv.name ?? command[0] ?? 'unknown';
   const port = argv.port;
 
-  const server = new LogServer(port, argv.tail);
+  const server = new LogServer(port, argv.buffer);
 
   // Try to become server with retries - if port is taken, become client
   let isServer = false;

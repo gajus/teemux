@@ -26,13 +26,13 @@ export type TeemuxContext = {
 
 export type TeemuxOptions = {
   /**
+   * Number of log lines to keep in the server buffer.
+   */
+  buffer?: number;
+  /**
    * Port to run on. If 0 or undefined, auto-assigns an available port.
    */
   port?: number;
-  /**
-   * Number of log lines to keep in the buffer.
-   */
-  tail?: number;
 };
 
 const postJson = (
@@ -83,7 +83,7 @@ export const runWithTeemux = async (
   options: TeemuxOptions,
   callback: (context: TeemuxContext) => Promise<void>,
 ): Promise<void> => {
-  const server = new LogServer(options.port ?? 0, options.tail ?? 1_000);
+  const server = new LogServer(options.port ?? 0, options.buffer ?? 10_000);
 
   await server.start();
 

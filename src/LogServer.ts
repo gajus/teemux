@@ -68,7 +68,7 @@ export class LogServer {
 
   private tailSize: number;
 
-  constructor(port: number, tailSize: number = 1_000) {
+  constructor(port: number, tailSize: number = 10_000) {
     this.port = port;
     this.tailSize = tailSize;
   }
@@ -87,6 +87,61 @@ export class LogServer {
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.server = http.createServer((request, response) => {
+        // Handle search endpoint - returns matching logs as JSON
+        if (request.method === 'GET' && request.url?.startsWith('/search')) {
+          const url = new URL(request.url, `http://${request.headers.host}`);
+          const includeParameter = url.searchParams.get('include');
+          const includes = includeParameter
+            ? includeParameter
+                .split(',')
+                .map((term) => term.trim())
+                .filter(Boolean)
+            : [];
+          const excludeParameter = url.searchParams.get('exclude');
+          const excludes = excludeParameter
+            ? excludeParameter
+                .split(',')
+                .map((pattern) => pattern.trim())
+                .filter(Boolean)
+            : [];
+          const limit = Math.min(
+            Number.parseInt(url.searchParams.get('limit') ?? '1000', 10),
+            1000,
+          );
+
+          // Sort buffer by timestamp
+          const sortedBuffer = this.buffer.toSorted(
+            (a, b) => a.timestamp - b.timestamp,
+          );
+
+          // Filter and limit results
+          const results: Array<{ html: string; raw: string }> = [];
+
+          for (const entry of sortedBuffer) {
+            if (matchesFilters(entry.line, includes, excludes)) {
+              let html = this.ansiConverter.toHtml(entry.line);
+              html = highlightJson(html);
+              html = linkifyUrls(html);
+              results.push({
+                html,
+                raw: stripAnsi(entry.line),
+              });
+
+              if (results.length >= limit) {
+                break;
+              }
+            }
+          }
+
+          response.writeHead(200, {
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-cache',
+            'Content-Type': 'application/json; charset=utf-8',
+          });
+          response.end(JSON.stringify(results));
+          return;
+        }
+
         // Handle streaming GET request
         if (request.method === 'GET' && request.url?.startsWith('/')) {
           const url = new URL(request.url, `http://${request.headers.host}`);
@@ -114,7 +169,7 @@ export class LogServer {
           );
 
           if (isBrowser) {
-            // Browser: send all logs, filtering is done client-side
+            // Browser: send initial batch (limited), more available via /search
             response.writeHead(200, {
               'Cache-Control': 'no-cache',
               Connection: 'keep-alive',
@@ -125,8 +180,10 @@ export class LogServer {
             // Send HTML header with styling
             response.write(this.getHtmlHeader());
 
-            // Send all buffered logs as HTML
-            for (const entry of sortedBuffer) {
+            // Send last 1000 logs initially (browser can fetch more via /search)
+            const initialLogs = sortedBuffer.slice(-1000);
+
+            for (const entry of initialLogs) {
               response.write(this.getHtmlLine(entry.line));
             }
           } else {
@@ -451,7 +508,7 @@ export class LogServer {
     const highlightInput = document.getElementById('highlight');
     const tailBtn = document.getElementById('tail-btn');
     const params = new URLSearchParams(window.location.search);
-    const tailSize = ${this.tailSize};
+    const tailSize = Math.min(${this.tailSize}, 1000);
     
     includeInput.value = params.get('include') || '';
     excludeInput.value = params.get('exclude') || '';
@@ -508,7 +565,7 @@ export class LogServer {
       return result;
     };
     
-    const applyFilters = () => {
+    const applyFiltersLocal = () => {
       const includes = includeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const excludes = excludeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const highlights = highlightInput.value.split(',').map(s => s.trim()).filter(Boolean);
@@ -529,6 +586,15 @@ export class LogServer {
           contentEl.innerHTML = html;
         }
       });
+    };
+    
+    let lastSearchQuery = '';
+    let searchController = null;
+    
+    const applyFilters = async () => {
+      const includes = includeInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      const excludes = excludeInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      const highlights = highlightInput.value.split(',').map(s => s.trim()).filter(Boolean);
       
       // Update URL without reload
       const newParams = new URLSearchParams();
@@ -538,10 +604,93 @@ export class LogServer {
       const newUrl = newParams.toString() ? '?' + newParams.toString() : window.location.pathname;
       history.replaceState(null, '', newUrl);
       
-      // Jump to bottom and resume tailing after filter change
-      container.scrollTop = container.scrollHeight;
-      tailing = true;
-      updateTailButton();
+      // Build search query string for comparison
+      const searchQuery = includeInput.value + '|' + excludeInput.value;
+      
+      // If only highlight changed, just re-apply local highlighting
+      if (searchQuery === lastSearchQuery) {
+        applyFiltersLocal();
+        return;
+      }
+      
+      lastSearchQuery = searchQuery;
+      
+      // Cancel any pending search request
+      if (searchController) {
+        searchController.abort();
+      }
+      
+      // If no filters, just apply local filtering (show all)
+      if (includes.length === 0 && excludes.length === 0) {
+        applyFiltersLocal();
+        container.scrollTop = container.scrollHeight;
+        tailing = true;
+        updateTailButton();
+        return;
+      }
+      
+      // Fetch matching logs from server
+      searchController = new AbortController();
+      const searchParams = new URLSearchParams();
+      if (includeInput.value) searchParams.set('include', includeInput.value);
+      if (excludeInput.value) searchParams.set('exclude', excludeInput.value);
+      searchParams.set('limit', '1000');
+      
+      try {
+        const response = await fetch('/search?' + searchParams.toString(), {
+          signal: searchController.signal
+        });
+        const results = await response.json();
+        
+        // Clear non-pinned lines
+        document.querySelectorAll('.line').forEach(line => {
+          if (!pinnedIds.has(line.dataset.id)) {
+            line.remove();
+          }
+        });
+        
+        // Add search results
+        for (const item of results) {
+          const id = 'line-' + (lineCounter++);
+          const div = document.createElement('div');
+          div.className = 'line';
+          div.dataset.id = id;
+          div.dataset.raw = item.raw;
+          div.dataset.html = item.html;
+          
+          let displayHtml = item.html;
+          displayHtml = highlightTerms(displayHtml, includes, 'filter');
+          displayHtml = highlightTerms(displayHtml, highlights);
+          
+          div.innerHTML = '<span class="line-content">' + displayHtml + '</span><span class="pin-btn" title="Pin">' + pinIcon + '</span>';
+          
+          // Pin button handler
+          div.querySelector('.pin-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (pinnedIds.has(id)) {
+              pinnedIds.delete(id);
+              div.classList.remove('pinned');
+            } else {
+              pinnedIds.add(id);
+              div.classList.add('pinned');
+            }
+            applyFiltersLocal();
+          });
+          
+          container.appendChild(div);
+        }
+        
+        // Jump to bottom and resume tailing
+        container.scrollTop = container.scrollHeight;
+        tailing = true;
+        updateTailButton();
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          console.error('Search failed:', e);
+          // Fallback to local filtering
+          applyFiltersLocal();
+        }
+      }
     };
     
     const trimBuffer = () => {
@@ -584,7 +733,7 @@ export class LogServer {
           pinnedIds.add(id);
           div.classList.add('pinned');
         }
-        applyFilters();
+        applyFiltersLocal();
       });
       
       const matches = matchesFilters(raw, includes, excludes);
@@ -613,9 +762,9 @@ export class LogServer {
       debounceTimer = setTimeout(fn, delay);
     };
     
-    includeInput.addEventListener('input', () => debounce(applyFilters, 50));
-    excludeInput.addEventListener('input', () => debounce(applyFilters, 50));
-    highlightInput.addEventListener('input', () => debounce(applyFilters, 50));
+    includeInput.addEventListener('input', () => debounce(applyFilters, 300));
+    excludeInput.addEventListener('input', () => debounce(applyFilters, 300));
+    highlightInput.addEventListener('input', () => debounce(applyFilters, 150));
   </script>
 `;
   }
