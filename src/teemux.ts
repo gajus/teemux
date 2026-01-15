@@ -144,20 +144,48 @@ const runProcess = async (
 
   await client.event('start', pid);
 
+  let rlStdout: readline.Interface | null = null;
+  let rlStderr: readline.Interface | null = null;
+
   if (child.stdout) {
-    const rlStdout = readline.createInterface({ input: child.stdout });
+    rlStdout = readline.createInterface({ input: child.stdout });
 
     rlStdout.on('line', (line) => client.log(line, 'stdout'));
   }
 
   if (child.stderr) {
-    const rlStderr = readline.createInterface({ input: child.stderr });
+    rlStderr = readline.createInterface({ input: child.stderr });
 
     rlStderr.on('line', (line) => client.log(line, 'stderr'));
   }
 
+  // Track signal count for force-kill on second signal
+  let signalCount = 0;
+
+  const onSignal = (): void => {
+    signalCount++;
+
+    if (signalCount >= 2 && child.pid && !child.killed) {
+      // Second signal: force kill
+      child.kill('SIGKILL');
+    }
+  };
+
+  process.on('SIGINT', onSignal);
+  process.on('SIGTERM', onSignal);
+  process.on('SIGHUP', onSignal);
+
   return new Promise((resolve) => {
     child.on('close', async (code) => {
+      // Clean up readline interfaces
+      rlStdout?.close();
+      rlStderr?.close();
+
+      // Remove signal handlers
+      process.off('SIGINT', onSignal);
+      process.off('SIGTERM', onSignal);
+      process.off('SIGHUP', onSignal);
+
       await client.flush();
       await client.event('exit', pid, code ?? 0);
       resolve(code ?? 0);
@@ -389,11 +417,20 @@ const main = async (): Promise<void> => {
 
   const client = new LogClient(name, port);
 
+  // Cleanup function for graceful shutdown
+  const cleanup = async (): Promise<void> => {
+    leaderMonitor?.stop();
+
+    if (isServer) {
+      await server.stop();
+    }
+  };
+
   // Run the process
   const exitCode = await runProcess(name, command, client);
 
   // Stop leader monitoring if running
-  leaderMonitor?.stop();
+  await cleanup();
 
   process.exit(exitCode);
 };
