@@ -116,26 +116,26 @@ test.describe('filtering', () => {
   test('server-side search finds logs beyond browser buffer', async ({
     page,
   }) => {
-    await runWithTeemux({ buffer: 2000 }, async (context) => {
+    await runWithTeemux({ buffer: 2_000 }, async (context) => {
       // Inject early logs with a unique marker
-      for (let i = 0; i < 10; i++) {
-        await context.injectLog('app', `EARLY_MARKER log number ${i}`);
+      for (let index = 0; index < 10; index++) {
+        await context.injectLog('app', `EARLY_MARKER log number ${index}`);
       }
 
       // Inject 1000 filler logs to push early logs out of browser's initial load
       // (browser only receives last 1000 logs on connect)
-      for (let i = 0; i < 1000; i++) {
-        await context.injectLog('app', `FILLER log number ${i}`);
+      for (let index = 0; index < 1_000; index++) {
+        await context.injectLog('app', `FILLER log number ${index}`);
       }
 
       // Navigate to page - browser receives last 1000 logs (all FILLER)
       await page.goto(context.url, { waitUntil: 'commit' });
 
       // Wait for initial logs to load
-      await expect(page.locator('.line')).toHaveCount(1000);
+      await expect(page.locator('.line')).toHaveCount(1_000);
 
       // Verify no EARLY_MARKER logs are visible initially
-      await expect(page.locator('.line:visible')).toHaveCount(1000);
+      await expect(page.locator('.line:visible')).toHaveCount(1_000);
       const earlyLogsInitially = page.locator(
         '.line:visible:has-text("EARLY_MARKER")',
       );

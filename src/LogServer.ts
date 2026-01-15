@@ -106,7 +106,7 @@ export class LogServer {
             : [];
           const limit = Math.min(
             Number.parseInt(url.searchParams.get('limit') ?? '1000', 10),
-            1000,
+            1_000,
           );
 
           // Sort buffer by timestamp
@@ -181,7 +181,7 @@ export class LogServer {
             response.write(this.getHtmlHeader());
 
             // Send last 1000 logs initially (browser can fetch more via /search)
-            const initialLogs = sortedBuffer.slice(-1000);
+            const initialLogs = sortedBuffer.slice(-1_000);
 
             for (const entry of initialLogs) {
               response.write(this.getHtmlLine(entry.line));
