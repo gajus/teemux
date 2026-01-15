@@ -144,8 +144,8 @@ const runProcess = async (
 
   await client.event('start', pid);
 
-  let rlStdout: readline.Interface | null = null;
-  let rlStderr: readline.Interface | null = null;
+  let rlStdout: null | readline.Interface = null;
+  let rlStderr: null | readline.Interface = null;
 
   if (child.stdout) {
     rlStdout = readline.createInterface({ input: child.stdout });
