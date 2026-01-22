@@ -529,6 +529,12 @@ export class LogServer {
     #clear-btn svg {
       flex-shrink: 0;
     }
+    #clear-btn.active {
+      background: #264f78;
+      border-color: #007acc;
+      color: #fff;
+      box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -536,7 +542,7 @@ export class LogServer {
     <label>Include: <input type="text" id="include" placeholder="error*,warn* (OR, * = wildcard)"></label>
     <label>Exclude: <input type="text" id="exclude" placeholder="health*,debug (OR, * = wildcard)"></label>
     <label>Highlight: <input type="text" id="highlight" placeholder="term1,term2"></label>
-    <button id="clear-btn" title="Clear all logs">
+    <button id="clear-btn" title="Clear all logs (Cmd+K)">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
       Clear
     </button>
@@ -813,8 +819,20 @@ export class LogServer {
       updateTailButton();
     });
 
-    clearBtn.addEventListener('click', () => {
+    const triggerClear = () => {
+      clearBtn.classList.add('active');
       fetch('/clear', { method: 'POST' });
+      setTimeout(() => clearBtn.classList.remove('active'), 150);
+    };
+
+    clearBtn.addEventListener('click', triggerClear);
+
+    // Cmd+K (Mac) or Ctrl+K (Windows/Linux) to clear logs
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        triggerClear();
+      }
     });
 
     let debounceTimer;

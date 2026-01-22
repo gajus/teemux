@@ -2,6 +2,43 @@ import { runWithTeemux } from '../src/testing/runWithTeemux.js';
 import { expect, test } from '@playwright/test';
 
 test.describe('clear logs', () => {
+  test('Cmd+K keyboard shortcut clears all logs', async ({ page }) => {
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'message 1');
+      await context.injectLog('app', 'message 2');
+      await context.injectLog('app', 'message 3');
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Wait for logs to appear
+      await expect(page.locator('.line')).toHaveCount(3);
+
+      // Press Cmd+K (Meta+K on Mac, Control+K on others)
+      await page.keyboard.press('Meta+k');
+
+      // Wait for logs to be cleared
+      await expect(page.locator('.line')).toHaveCount(0);
+    });
+  });
+
+  test('Ctrl+K keyboard shortcut clears all logs', async ({ page }) => {
+    await runWithTeemux({}, async (context) => {
+      await context.injectLog('app', 'message 1');
+      await context.injectLog('app', 'message 2');
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Wait for logs to appear
+      await expect(page.locator('.line')).toHaveCount(2);
+
+      // Press Ctrl+K
+      await page.keyboard.press('Control+k');
+
+      // Wait for logs to be cleared
+      await expect(page.locator('.line')).toHaveCount(0);
+    });
+  });
+
   test('clear button removes all logs from the browser', async ({ page }) => {
     await runWithTeemux({}, async (context) => {
       await context.injectLog('app', 'message 1');
