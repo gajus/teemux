@@ -852,8 +852,16 @@ export class LogServer {
     let html = this.ansiConverter.toHtml(line);
     html = highlightJson(html);
     html = linkifyUrls(html);
-    const escaped = html.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
-    const raw = stripAnsi(line).replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+    const escaped = html
+      .replaceAll('\\', '\\\\')
+      .replaceAll("'", "\\'")
+      .replaceAll('\n', '\\n')
+      .replaceAll('\r', '\\r');
+    const raw = stripAnsi(line)
+      .replaceAll('\\', '\\\\')
+      .replaceAll("'", "\\'")
+      .replaceAll('\n', '\\n')
+      .replaceAll('\r', '\\r');
     return `<script>addLine('${escaped}', '${raw}')</script>\n`;
   }
 
