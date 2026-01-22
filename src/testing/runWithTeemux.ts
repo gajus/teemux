@@ -3,6 +3,10 @@ import http from 'node:http';
 
 export type TeemuxContext = {
   /**
+   * Clear all logs from the server buffer and notify connected clients.
+   */
+  clearLogs: () => Promise<void>;
+  /**
    * Inject an event (start/exit) for a named process.
    */
   injectEvent: (
@@ -38,16 +42,22 @@ export type TeemuxOptions = {
 const postJson = (
   port: number,
   path: string,
-  data: Record<string, unknown>,
+  data?: Record<string, unknown>,
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const postData = JSON.stringify(data);
+    const postData = data ? JSON.stringify(data) : '';
+    const headers: Record<string, string | number> = {};
+
+    if (data) {
+      headers['Content-Type'] = 'application/json';
+      headers['Content-Length'] = Buffer.byteLength(postData);
+    } else {
+      headers['Content-Length'] = 0;
+    }
+
     const request = http.request(
       {
-        headers: {
-          'Content-Length': Buffer.byteLength(postData),
-          'Content-Type': 'application/json',
-        },
+        headers,
         hostname: '127.0.0.1',
         method: 'POST',
         path,
@@ -60,7 +70,10 @@ const postJson = (
     );
 
     request.on('error', reject);
-    request.write(postData);
+    if (postData) {
+      request.write(postData);
+    }
+
     request.end();
   });
 };
@@ -91,6 +104,9 @@ export const runWithTeemux = async (
   const url = `http://127.0.0.1:${port}`;
 
   const context: TeemuxContext = {
+    clearLogs: async () => {
+      await postJson(port, '/clear');
+    },
     injectEvent: async (
       name: string,
       event: 'exit' | 'start',

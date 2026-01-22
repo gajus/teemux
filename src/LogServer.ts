@@ -286,6 +286,12 @@ export class LogServer {
 
             response.writeHead(200);
             response.end();
+          } else if (request.method === 'POST' && request.url === '/clear') {
+            // Clear all logs from buffer and notify clients
+            this.clearLogs();
+
+            response.writeHead(200);
+            response.end();
           } else {
             response.writeHead(200);
             response.end();
@@ -325,6 +331,18 @@ export class LogServer {
         resolve();
       }
     });
+  }
+
+  clearLogs(): void {
+    // Clear the server buffer
+    this.buffer = [];
+
+    // Notify all browser clients to clear their logs
+    for (const client of this.clients) {
+      if (client.isBrowser) {
+        client.response.write(`<script>clearLogs()</script>\n`);
+      }
+    }
   }
 
   private broadcastEvent(
@@ -488,6 +506,29 @@ export class LogServer {
     #tail-btn svg {
       flex-shrink: 0;
     }
+    #clear-btn {
+      margin-left: auto;
+      background: transparent;
+      color: #888;
+      border: 1px solid #3c3c3c;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    #clear-btn:hover {
+      background: #3c3c3c;
+      color: #d4d4d4;
+      border-color: #505050;
+    }
+    #clear-btn svg {
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -495,6 +536,10 @@ export class LogServer {
     <label>Include: <input type="text" id="include" placeholder="error*,warn* (OR, * = wildcard)"></label>
     <label>Exclude: <input type="text" id="exclude" placeholder="health*,debug (OR, * = wildcard)"></label>
     <label>Highlight: <input type="text" id="highlight" placeholder="term1,term2"></label>
+    <button id="clear-btn" title="Clear all logs">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+      Clear
+    </button>
   </div>
   <div id="container"></div>
   <button id="tail-btn" title="Jump to bottom and follow new logs">
@@ -507,6 +552,7 @@ export class LogServer {
     const excludeInput = document.getElementById('exclude');
     const highlightInput = document.getElementById('highlight');
     const tailBtn = document.getElementById('tail-btn');
+    const clearBtn = document.getElementById('clear-btn');
     const params = new URLSearchParams(window.location.search);
     const tailSize = Math.min(${this.tailSize}, 1000);
     
@@ -703,6 +749,17 @@ export class LogServer {
         }
       }
     };
+
+    const clearLogs = () => {
+      // Remove all log lines from the DOM
+      container.innerHTML = '';
+      // Reset pinned IDs
+      pinnedIds.clear();
+      // Reset line counter
+      lineCounter = 0;
+      // Reset search state
+      lastSearchQuery = '';
+    };
     
     let lineCounter = 0;
     const addLine = (html, raw) => {
@@ -755,7 +812,11 @@ export class LogServer {
       tailing = true;
       updateTailButton();
     });
-    
+
+    clearBtn.addEventListener('click', () => {
+      fetch('/clear', { method: 'POST' });
+    });
+
     let debounceTimer;
     const debounce = (fn, delay) => {
       clearTimeout(debounceTimer);
