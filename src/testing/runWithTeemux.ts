@@ -46,7 +46,7 @@ const postJson = (
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
     const postData = data ? JSON.stringify(data) : '';
-    const headers: Record<string, string | number> = {};
+    const headers: Record<string, number | string> = {};
 
     if (data) {
       headers['Content-Type'] = 'application/json';

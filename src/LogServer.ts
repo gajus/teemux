@@ -73,6 +73,18 @@ export class LogServer {
     this.tailSize = tailSize;
   }
 
+  clearLogs(): void {
+    // Clear the server buffer
+    this.buffer = [];
+
+    // Notify all browser clients to clear their logs
+    for (const client of this.clients) {
+      if (client.isBrowser) {
+        client.response.write(`<script>clearLogs()</script>\n`);
+      }
+    }
+  }
+
   getPort(): number {
     if (this.server) {
       const address = this.server.address();
@@ -331,18 +343,6 @@ export class LogServer {
         resolve();
       }
     });
-  }
-
-  clearLogs(): void {
-    // Clear the server buffer
-    this.buffer = [];
-
-    // Notify all browser clients to clear their logs
-    for (const client of this.clients) {
-      if (client.isBrowser) {
-        client.response.write(`<script>clearLogs()</script>\n`);
-      }
-    }
   }
 
   private broadcastEvent(

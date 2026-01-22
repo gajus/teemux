@@ -137,8 +137,8 @@ test.describe('clear logs', () => {
   });
 
   test('clear works with multiple connected browsers', async ({
-    page,
     browser,
+    page,
   }) => {
     await runWithTeemux({}, async (context) => {
       await context.injectLog('app', 'shared message');

@@ -5,7 +5,7 @@ test.describe('long lines', () => {
   test('very long single line stays as one log entry', async ({ page }) => {
     await runWithTeemux({}, async (context) => {
       // Create a very long line (5000 characters)
-      const longMessage = 'x'.repeat(5000);
+      const longMessage = 'x'.repeat(5_000);
       await context.injectLog('app', longMessage);
 
       await page.goto(context.url, { waitUntil: 'commit' });
@@ -22,7 +22,10 @@ test.describe('long lines', () => {
   test('long line with spaces stays as one log entry', async ({ page }) => {
     await runWithTeemux({}, async (context) => {
       // Create a long line with words
-      const words = Array.from({ length: 500 }, (_, i) => `word${i}`).join(' ');
+      const words = Array.from(
+        { length: 500 },
+        (_, index) => `word${index}`,
+      ).join(' ');
       await context.injectLog('app', words);
 
       await page.goto(context.url, { waitUntil: 'commit' });
@@ -39,7 +42,7 @@ test.describe('long lines', () => {
 
   test('simple JSON object stays as one log entry', async ({ page }) => {
     await runWithTeemux({}, async (context) => {
-      const json = JSON.stringify({ key: 'value', number: 123, bool: true });
+      const json = JSON.stringify({ bool: true, key: 'value', number: 123 });
       await context.injectLog('app', json);
 
       await page.goto(context.url, { waitUntil: 'commit' });
@@ -58,9 +61,10 @@ test.describe('long lines', () => {
     await runWithTeemux({}, async (context) => {
       // Create a large JSON object
       const largeObject: Record<string, string> = {};
-      for (let i = 0; i < 100; i++) {
-        largeObject[`key${i}`] = `value${i}`;
+      for (let index = 0; index < 100; index++) {
+        largeObject[`key${index}`] = `value${index}`;
       }
+
       const json = JSON.stringify(largeObject);
       await context.injectLog('app', json);
 
@@ -82,14 +86,14 @@ test.describe('long lines', () => {
         level1: {
           level2: {
             level3: {
-              deep: 'value',
               array: [1, 2, 3, 4, 5],
+              deep: 'value',
             },
           },
         },
         metadata: {
-          timestamp: '2024-01-01T00:00:00Z',
           tags: ['tag1', 'tag2', 'tag3'],
+          timestamp: '2024-01-01T00:00:00Z',
         },
       };
       const json = JSON.stringify(nested);
@@ -109,9 +113,9 @@ test.describe('long lines', () => {
 
   test('JSON array stays as one log entry', async ({ page }) => {
     await runWithTeemux({}, async (context) => {
-      const array = Array.from({ length: 50 }, (_, i) => ({
-        id: i,
-        name: `item${i}`,
+      const array = Array.from({ length: 50 }, (_, index) => ({
+        id: index,
+        name: `item${index}`,
       }));
       const json = JSON.stringify(array);
       await context.injectLog('app', json);
@@ -127,9 +131,9 @@ test.describe('long lines', () => {
     page,
   }) => {
     await runWithTeemux({}, async (context) => {
-      const line1 = 'first-' + 'a'.repeat(1000);
-      const line2 = 'second-' + 'b'.repeat(1000);
-      const line3 = 'third-' + 'c'.repeat(1000);
+      const line1 = 'first-' + 'a'.repeat(1_000);
+      const line2 = 'second-' + 'b'.repeat(1_000);
+      const line3 = 'third-' + 'c'.repeat(1_000);
 
       await context.injectLog('app', line1);
       await context.injectLog('app', line2);
@@ -168,8 +172,8 @@ test.describe('long lines', () => {
   test('JSON with URLs stays as one log entry', async ({ page }) => {
     await runWithTeemux({}, async (context) => {
       const json = JSON.stringify({
-        url: 'https://example.com/path?query=value&other=123',
         callback: 'http://localhost:3000/callback',
+        url: 'https://example.com/path?query=value&other=123',
       });
       await context.injectLog('app', json);
 
@@ -241,7 +245,8 @@ test.describe('long lines', () => {
       const errorLog = JSON.stringify({
         level: 'error',
         message: 'Something went wrong',
-        stack: 'Error: Something went wrong\n    at foo (/app/src/index.js:10:5)\n    at bar (/app/src/index.js:20:3)',
+        stack:
+          'Error: Something went wrong\n    at foo (/app/src/index.js:10:5)\n    at bar (/app/src/index.js:20:3)',
       });
       await context.injectLog('app', errorLog);
 

@@ -34,26 +34,35 @@ const fetchJson = (port: number, path: string): Promise<unknown> => {
 describe('LogServer', () => {
   describe('clearLogs', () => {
     it('clears the server buffer', async () => {
-      await runWithTeemux({ buffer: 100 }, async (ctx) => {
+      await runWithTeemux({ buffer: 100 }, async (context) => {
         // Inject some logs
-        await ctx.injectLog('app', 'message 1');
-        await ctx.injectLog('app', 'message 2');
-        await ctx.injectLog('app', 'message 3');
+        await context.injectLog('app', 'message 1');
+        await context.injectLog('app', 'message 2');
+        await context.injectLog('app', 'message 3');
 
         // Verify logs exist via search
-        const beforeClear = (await fetchJson(ctx.port, '/search')) as Array<{
+        const beforeClear = (await fetchJson(
+          context.port,
+          '/search',
+        )) as Array<{
           raw: string;
         }>;
         expect(beforeClear.length).toBe(3);
-        expect(beforeClear.map((r) => r.raw)).toContain('[app] message 1');
-        expect(beforeClear.map((r) => r.raw)).toContain('[app] message 2');
-        expect(beforeClear.map((r) => r.raw)).toContain('[app] message 3');
+        expect(beforeClear.map((entry) => entry.raw)).toContain(
+          '[app] message 1',
+        );
+        expect(beforeClear.map((entry) => entry.raw)).toContain(
+          '[app] message 2',
+        );
+        expect(beforeClear.map((entry) => entry.raw)).toContain(
+          '[app] message 3',
+        );
 
         // Clear logs
-        await ctx.clearLogs();
+        await context.clearLogs();
 
         // Verify buffer is empty
-        const afterClear = (await fetchJson(ctx.port, '/search')) as Array<{
+        const afterClear = (await fetchJson(context.port, '/search')) as Array<{
           raw: string;
         }>;
         expect(afterClear.length).toBe(0);
@@ -61,18 +70,18 @@ describe('LogServer', () => {
     });
 
     it('allows new logs after clearing', async () => {
-      await runWithTeemux({ buffer: 100 }, async (ctx) => {
+      await runWithTeemux({ buffer: 100 }, async (context) => {
         // Inject initial logs
-        await ctx.injectLog('app', 'old message');
+        await context.injectLog('app', 'old message');
 
         // Clear logs
-        await ctx.clearLogs();
+        await context.clearLogs();
 
         // Inject new logs
-        await ctx.injectLog('app', 'new message');
+        await context.injectLog('app', 'new message');
 
         // Verify only new log exists
-        const results = (await fetchJson(ctx.port, '/search')) as Array<{
+        const results = (await fetchJson(context.port, '/search')) as Array<{
           raw: string;
         }>;
         expect(results.length).toBe(1);
@@ -81,23 +90,26 @@ describe('LogServer', () => {
     });
 
     it('clears events as well as regular logs', async () => {
-      await runWithTeemux({ buffer: 100 }, async (ctx) => {
+      await runWithTeemux({ buffer: 100 }, async (context) => {
         // Inject logs and events
-        await ctx.injectLog('app', 'message');
-        await ctx.injectEvent('app', 'start', 1234);
-        await ctx.injectEvent('app', 'exit');
+        await context.injectLog('app', 'message');
+        await context.injectEvent('app', 'start', 1_234);
+        await context.injectEvent('app', 'exit');
 
         // Verify they exist
-        const beforeClear = (await fetchJson(ctx.port, '/search')) as Array<{
+        const beforeClear = (await fetchJson(
+          context.port,
+          '/search',
+        )) as Array<{
           raw: string;
         }>;
         expect(beforeClear.length).toBe(3);
 
         // Clear logs
-        await ctx.clearLogs();
+        await context.clearLogs();
 
         // Verify all cleared
-        const afterClear = (await fetchJson(ctx.port, '/search')) as Array<{
+        const afterClear = (await fetchJson(context.port, '/search')) as Array<{
           raw: string;
         }>;
         expect(afterClear.length).toBe(0);
@@ -105,21 +117,21 @@ describe('LogServer', () => {
     });
 
     it('works with filtered search after clearing', async () => {
-      await runWithTeemux({ buffer: 100 }, async (ctx) => {
+      await runWithTeemux({ buffer: 100 }, async (context) => {
         // Inject logs from multiple processes
-        await ctx.injectLog('api', 'api message 1');
-        await ctx.injectLog('worker', 'worker message 1');
+        await context.injectLog('api', 'api message 1');
+        await context.injectLog('worker', 'worker message 1');
 
         // Clear logs
-        await ctx.clearLogs();
+        await context.clearLogs();
 
         // Inject new logs
-        await ctx.injectLog('api', 'api message 2');
-        await ctx.injectLog('worker', 'worker message 2');
+        await context.injectLog('api', 'api message 2');
+        await context.injectLog('worker', 'worker message 2');
 
         // Search with filter - should only find new logs
         const results = (await fetchJson(
-          ctx.port,
+          context.port,
           '/search?include=api',
         )) as Array<{
           raw: string;
