@@ -59,8 +59,6 @@ const COLORS = [
 const RESET = '\u001B[0m';
 const DIM = '\u001B[90m';
 const RED = '\u001B[91m';
-const HOST = '0.0.0.0';
-
 type BufferedLog = {
   line: string;
   timestamp: number;
@@ -380,9 +378,12 @@ export class LogServer {
       });
 
       this.server.listen(this.port, '0.0.0.0', () => {
+        const addr = this.server?.address();
+        const boundPort =
+          addr && typeof addr === 'object' ? addr.port : this.port;
         // eslint-disable-next-line no-console
         console.log(
-          `${DIM}[teemux] aggregating logs on http://${HOST}:${this.port}${RESET}`,
+          `${DIM}[teemux] aggregating logs on http://localhost:${boundPort}${RESET}`,
         );
         resolve();
       });
