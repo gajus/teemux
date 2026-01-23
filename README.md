@@ -18,7 +18,9 @@
   <a href="https://github.com/gajus/teemux/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/teemux.svg" alt="license" /></a>
 </p>
 
-<video src="https://static.teemux.com/teemux-demo.mp4" controls width="600"></video>
+<p align="center">
+  <a href="https://teemux.com/">View demo</a>
+</p>
 
 ---
 
