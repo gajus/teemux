@@ -27,7 +27,10 @@
       "minfo",
       "merror",
       "vitest",
-      "pandacss"
+      "pandacss",
+      "modelcontextprotocol",
+      "streamable",
+      "onsessioninitialized"
     ]
   },
   "dependencies": {
