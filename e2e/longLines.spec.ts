@@ -256,4 +256,111 @@ test.describe('long lines', () => {
       await expect(page.locator('.line')).toHaveCount(1);
     });
   });
+
+  test('HTML content stays as one log entry', async ({ page }) => {
+    await runWithTeemux({}, async (context) => {
+      const htmlContent = `<div class="container"><span id="test">Hello</span><a href="https://example.com">Link</a></div>`;
+      await context.injectLog('app', htmlContent);
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Should be exactly one line
+      await expect(page.locator('.line')).toHaveCount(1);
+
+      const lineContent = await page.locator('.line').first().textContent();
+      expect(lineContent).toContain('container');
+    });
+  });
+
+  test('CSS content stays as one log entry', async ({ page }) => {
+    await runWithTeemux({}, async (context) => {
+      const cssContent = `.container { margin: 0; padding: 10px; } .button { background-color: #007bff; border: none; }`;
+      await context.injectLog('app', cssContent);
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Should be exactly one line
+      await expect(page.locator('.line')).toHaveCount(1);
+
+      const lineContent = await page.locator('.line').first().textContent();
+      expect(lineContent).toContain('container');
+      expect(lineContent).toContain('margin');
+    });
+  });
+
+  test('very long minified CSS stays as one log entry', async ({ page }) => {
+    await runWithTeemux({}, async (context) => {
+      // Generate a long minified CSS string
+      const rules = Array.from(
+        { length: 100 },
+        (_, index) =>
+          `.class${index}{margin:${index}px;padding:${index}px;background:#${String(index).padStart(3, '0')}}`,
+      ).join('');
+      await context.injectLog('app', rules);
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Should be exactly one line
+      await expect(page.locator('.line')).toHaveCount(1);
+
+      const lineContent = await page.locator('.line').first().textContent();
+      expect(lineContent).toContain('class0');
+      expect(lineContent).toContain('class99');
+    });
+  });
+
+  test('content with U+2028 Line Separator stays as one log entry', async ({
+    page,
+  }) => {
+    await runWithTeemux({}, async (context) => {
+      // U+2028 is a valid JS line terminator that can break string literals
+      const contentWithLineSeparator = `before\u2028after`;
+      await context.injectLog('app', contentWithLineSeparator);
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Should be exactly one line
+      await expect(page.locator('.line')).toHaveCount(1);
+
+      const lineContent = await page.locator('.line').first().textContent();
+      expect(lineContent).toContain('before');
+      expect(lineContent).toContain('after');
+    });
+  });
+
+  test('content with U+2029 Paragraph Separator stays as one log entry', async ({
+    page,
+  }) => {
+    await runWithTeemux({}, async (context) => {
+      // U+2029 is a valid JS line terminator that can break string literals
+      const contentWithParagraphSeparator = `start\u2029end`;
+      await context.injectLog('app', contentWithParagraphSeparator);
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Should be exactly one line
+      await expect(page.locator('.line')).toHaveCount(1);
+
+      const lineContent = await page.locator('.line').first().textContent();
+      expect(lineContent).toContain('start');
+      expect(lineContent).toContain('end');
+    });
+  });
+
+  test('content with null bytes stays as one log entry', async ({ page }) => {
+    await runWithTeemux({}, async (context) => {
+      // Null bytes could interfere with string handling
+      const contentWithNullBytes = `text\u0000with\u0000nulls`;
+      await context.injectLog('app', contentWithNullBytes);
+
+      await page.goto(context.url, { waitUntil: 'commit' });
+
+      // Should be exactly one line
+      await expect(page.locator('.line')).toHaveCount(1);
+
+      const lineContent = await page.locator('.line').first().textContent();
+      expect(lineContent).toContain('text');
+      expect(lineContent).toContain('nulls');
+    });
+  });
 });
