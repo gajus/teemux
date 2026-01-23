@@ -20,6 +20,9 @@ export default defineConfig({
       },
     },
   },
+  css: {
+    postcss: resolve(__dirname, 'postcss.config.cjs'),
+  },
   define: {
     'process.env.NODE_ENV': JSON.stringify('production'),
   },

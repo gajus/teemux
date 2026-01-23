@@ -1,3 +1,4 @@
+import { css, cx } from '../styled-system/css';
 import { type LogLine as LogLineType } from '../types';
 
 type LogLineProps = {
@@ -23,6 +24,51 @@ const PinIcon = () => (
   </svg>
 );
 
+const lineStyles = css({
+  '&:hover': {
+    background: 'rgba(255, 255, 255, 0.05)',
+  },
+  '&:hover .pin-btn': {
+    opacity: 0.5,
+  },
+  alignItems: 'flex-start',
+  borderRadius: '2px',
+  display: 'flex',
+  margin: '0 -4px',
+  padding: '1px 4px',
+  position: 'relative',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-all',
+});
+
+const pinnedStyles = css({
+  '& .pin-btn': {
+    color: '#fc0',
+    opacity: 1,
+  },
+  background: 'rgba(255, 204, 0, 0.1)',
+  borderLeft: '2px solid #fc0',
+  marginLeft: '-6px',
+  paddingLeft: '6px',
+});
+
+const lineContentStyles = css({
+  flex: 1,
+});
+
+const pinButtonStyles = css({
+  '&:hover': {
+    color: '#fc0',
+    opacity: '1 !important',
+  },
+  color: '#888',
+  cursor: 'pointer',
+  flexShrink: 0,
+  opacity: 0,
+  padding: '0 4px',
+  transition: 'opacity 0.15s',
+});
+
 export const LogLine = ({ displayHtml, line, onTogglePin }: LogLineProps) => {
   const handlePinClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -31,19 +77,24 @@ export const LogLine = ({ displayHtml, line, onTogglePin }: LogLineProps) => {
 
   return (
     <div
-      className={`line${line.pinned ? ' pinned' : ''}`}
+      className={cx(
+        'line',
+        lineStyles,
+        line.pinned && 'pinned',
+        line.pinned && pinnedStyles,
+      )}
       data-html={line.html}
       data-id={line.id}
       data-raw={line.raw}
       style={{ display: line.visible || line.pinned ? '' : 'none' }}
     >
       <span
-        className="line-content"
+        className={cx('line-content', lineContentStyles)}
         // eslint-disable-next-line react/no-danger -- Required for rendering HTML log content
         dangerouslySetInnerHTML={{ __html: displayHtml }}
       />
       <span
-        className="pin-btn"
+        className={cx('pin-btn', pinButtonStyles)}
         onClick={handlePinClick}
         title="Pin"
       >

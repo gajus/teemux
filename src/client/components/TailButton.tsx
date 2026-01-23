@@ -1,3 +1,5 @@
+import { css } from '../styled-system/css';
+
 type TailButtonProps = {
   readonly onClick: () => void;
   readonly visible: boolean;
@@ -20,10 +22,34 @@ const TailIcon = () => (
   </svg>
 );
 
+const tailButtonStyles = css({
+  '&:hover': {
+    background: '#0098ff',
+  },
+  '& svg': {
+    flexShrink: 0,
+  },
+  alignItems: 'center',
+  background: '#007acc',
+  border: 'none',
+  borderRadius: '4px',
+  bottom: '20px',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+  color: '#fff',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  fontSize: '12px',
+  gap: '6px',
+  padding: '8px 16px',
+  position: 'fixed',
+  right: '20px',
+  transition: 'background 0.15s',
+});
+
 export const TailButton = ({ onClick, visible }: TailButtonProps) => {
   return (
     <button
-      id="tail-btn"
+      className={tailButtonStyles}
       onClick={onClick}
       style={{ display: visible ? 'flex' : 'none' }}
       title="Jump to bottom and follow new logs"

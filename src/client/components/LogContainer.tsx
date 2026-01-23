@@ -1,3 +1,4 @@
+import { css } from '../styled-system/css';
 import { type LogLine as LogLineType } from '../types';
 import {
   highlightTerms,
@@ -15,6 +16,12 @@ type LogContainerProps = {
   readonly onTogglePin: (id: string) => void;
   readonly summaryPaths: string[];
 };
+
+const containerStyles = css({
+  flex: 1,
+  overflowY: 'auto',
+  padding: '8px 12px',
+});
 
 export const LogContainer = forwardRef<HTMLDivElement, LogContainerProps>(
   (
@@ -34,7 +41,7 @@ export const LogContainer = forwardRef<HTMLDivElement, LogContainerProps>(
 
     return (
       <div
-        id="container"
+        className={containerStyles}
         onScroll={onScroll}
         ref={ref}
       >

@@ -4,6 +4,11 @@ import { defineConfig } from 'eslint/config';
 export default defineConfig([
   auto,
   {
-    ignores: ['dist', 'pnpm-lock.yaml'],
+    ignores: [
+      'dist',
+      'pnpm-lock.yaml',
+      'src/client/styled-system',
+      'test-results',
+    ],
   },
 ]);

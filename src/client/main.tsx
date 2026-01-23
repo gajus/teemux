@@ -2,7 +2,7 @@ import { App } from './App';
 import { type PendingLine } from './types';
 import { createRoot } from 'react-dom/client';
 // eslint-disable-next-line import/no-unassigned-import
-import './styles.css';
+import './styled-system/styles.css';
 
 // Global state for the function bridge
 let addLineHandler: ((html: string, raw: string) => void) | null = null;

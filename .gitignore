@@ -4,3 +4,4 @@ node_modules
 .*
 !.github
 !.gitignore
+src/client/styled-system
