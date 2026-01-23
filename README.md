@@ -95,7 +95,11 @@ Add teemux as an MCP server in your AI tool's configuration. For Claude Code, ad
 {
   "mcpServers": {
     "teemux": {
-      "url": "http://127.0.0.1:8336/mcp"
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://127.0.0.1:8336/mcp"
+      ]
     }
   }
 }
