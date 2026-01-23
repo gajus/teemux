@@ -29,7 +29,8 @@ for (const bundlePath of bundlePaths) {
 }
 
 // Read the favicon at module load time
-let faviconBase64: string = '';
+let faviconBase64 = '';
+
 const faviconPaths = [
   join(import.meta.dirname, 'client/favicon.ico'), // dist/client/favicon.ico when running from dist/
   join(import.meta.dirname, '../dist/client/favicon.ico'), // dist/client/favicon.ico when running from src/
