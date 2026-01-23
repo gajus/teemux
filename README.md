@@ -18,6 +18,10 @@
   <a href="https://github.com/gajus/teemux/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/teemux.svg" alt="license" /></a>
 </p>
 
+<p align="center">
+  <video src="https://static.teemux.com/teemux-demo.mp4" controls width="600"></video>
+</p>
+
 ---
 
 ## Motivation
