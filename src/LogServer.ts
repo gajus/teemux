@@ -304,6 +304,13 @@ export class LogServer {
 
             response.writeHead(200);
             response.end();
+          } else if (request.method === 'POST' && request.url === '/shutdown') {
+            // Gracefully shutdown the server (used by force-leader)
+            response.writeHead(200);
+            response.end();
+
+            // Stop the server after responding
+            void this.stop();
           } else {
             response.writeHead(200);
             response.end();

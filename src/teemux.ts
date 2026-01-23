@@ -198,6 +198,31 @@ const sleep = (ms: number): Promise<void> =>
     setTimeout(resolve, ms);
   });
 
+const requestLeaderShutdown = async (port: number): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const request = http.request(
+      {
+        hostname: '127.0.0.1',
+        method: 'POST',
+        path: '/shutdown',
+        port,
+        timeout: 1_000,
+      },
+      (response) => {
+        response.resume();
+        resolve(true);
+      },
+    );
+
+    request.on('error', () => resolve(false));
+    request.on('timeout', () => {
+      request.destroy();
+      resolve(false);
+    });
+    request.end();
+  });
+};
+
 const checkServerReady = async (port: number): Promise<boolean> => {
   return new Promise((resolve) => {
     const request = http.request(
@@ -352,6 +377,13 @@ const main = async (): Promise<void> => {
       description: 'Number of log lines to keep in server buffer',
       type: 'number',
     })
+    .option('force-leader', {
+      alias: 'f',
+      default: false,
+      description:
+        'Force this process to become the leader, replacing any existing leader',
+      type: 'boolean',
+    })
     .help()
     .parse();
 
@@ -367,8 +399,33 @@ const main = async (): Promise<void> => {
 
   const name = argv.name ?? command[0] ?? 'unknown';
   const port = argv.port;
+  const forceLeader = argv['force-leader'];
 
   const server = new LogServer(port, argv.buffer);
+
+  // If force-leader is set, try to shut down the existing leader first
+  if (forceLeader) {
+    const existingLeader = await checkServerReady(port);
+
+    if (existingLeader) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `${DIM}[teemux] requesting existing leader to step down...${RESET}`,
+      );
+      await requestLeaderShutdown(port);
+
+      // Wait for the leader to shut down
+      const maxWaitAttempts = 20;
+
+      for (let index = 0; index < maxWaitAttempts; index++) {
+        await sleep(100);
+
+        if (!(await checkServerReady(port))) {
+          break;
+        }
+      }
+    }
+  }
 
   // Try to become server with retries - if port is taken, become client
   let isServer = false;
