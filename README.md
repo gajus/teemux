@@ -1,6 +1,24 @@
-# teemux
+<p align="center">
+  <img src="assets/teemux.png" alt="teemux" width="120" />
+</p>
 
-Aggregate logs from multiple processes in a single view – in browser or terminal.
+<h1 align="center">teemux</h1>
+
+<p align="center">
+  <strong>Aggregate logs from multiple processes in a single view</strong>
+</p>
+
+<p align="center">
+  View in browser or terminal • Filter with patterns • Stream to AI agents via MCP
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/teemux"><img src="https://img.shields.io/npm/v/teemux.svg" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/teemux"><img src="https://img.shields.io/npm/dm/teemux.svg" alt="npm downloads" /></a>
+  <a href="https://github.com/gajus/teemux/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/teemux.svg" alt="license" /></a>
+</p>
+
+---
 
 ## Motivation
 
