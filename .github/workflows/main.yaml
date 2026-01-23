@@ -28,6 +28,7 @@ jobs:
       - run: pnpm run lint:cspell
       - run: pnpm run test:vitest
       - run: pnpm run test:playwright
+        timeout-minutes: 2
       - run: pnpm run build
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

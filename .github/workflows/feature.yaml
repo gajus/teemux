@@ -30,11 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: setup repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: setup node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
       - name: setup pnpm
@@ -42,8 +42,10 @@ jobs:
         with:
           version: 10
       - run: pnpm install
+      - run: pnpm exec playwright install
       - run: pnpm run test:vitest
       - run: pnpm run test:playwright
+        timeout-minutes: 2
       - run: pnpm run build
     timeout-minutes: 10
 name: Test and build
