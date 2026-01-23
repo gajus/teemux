@@ -55,6 +55,8 @@ const separatorStyles = css({
 
 const propertyNameStyles = css({});
 
+const propertyNameClass = 'json-key';
+
 const propertyNameActiveStyles = css({
   color: 'json.propActive',
   cursor: 'pointer',
@@ -71,12 +73,16 @@ const stringStyles = css({
   color: 'json.string',
 });
 
+const stringClass = 'json-string';
+
 const numberStyles = css({
   _hover: {
     background: 'json.valueHoverBg',
   },
   color: 'json.number',
 });
+
+const numberClass = 'json-number';
 
 const booleanStyles = css({
   _hover: {
@@ -85,12 +91,16 @@ const booleanStyles = css({
   color: 'json.boolean',
 });
 
+const booleanClass = 'json-bool';
+
 const nullStyles = css({
   _hover: {
     background: 'json.valueHoverBg',
   },
   color: 'json.null',
 });
+
+const nullClass = 'json-bool';
 
 const markStyles = css({
   background: 'json.markBg',
@@ -202,7 +212,7 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
     case 'boolean':
       return (
         <span
-          className={booleanStyles}
+          className={cx(booleanStyles, booleanClass)}
           onMouseEnter={() => onActivePathChange(path)}
           onMouseLeave={() => onActivePathChange(null)}
         >
@@ -216,7 +226,7 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
     case 'number':
       return (
         <span
-          className={numberStyles}
+          className={cx(numberStyles, numberClass)}
           onMouseEnter={() => onActivePathChange(path)}
           onMouseLeave={() => onActivePathChange(null)}
         >
@@ -231,7 +241,7 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
       if (entries === null) {
         return (
           <span
-            className={nullStyles}
+            className={cx(nullStyles, nullClass)}
             onMouseEnter={() => onActivePathChange(path)}
             onMouseLeave={() => onActivePathChange(null)}
           >
@@ -332,6 +342,7 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
                       <span
                         className={cx(
                           propertyNameStyles,
+                          propertyNameClass,
                           isActive && propertyNameActiveStyles,
                         )}
                         onMouseEnter={() => onActivePathChange(nextPath)}
@@ -371,6 +382,7 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
                     <span
                       className={cx(
                         propertyNameStyles,
+                        propertyNameClass,
                         isActive && propertyNameActiveStyles,
                       )}
                       onMouseEnter={() => onActivePathChange(nextPath)}
@@ -403,7 +415,7 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
     case 'string':
       return (
         <span
-          className={stringStyles}
+          className={cx(stringStyles, stringClass)}
           onMouseEnter={() => onActivePathChange(path)}
           onMouseLeave={() => onActivePathChange(null)}
         >

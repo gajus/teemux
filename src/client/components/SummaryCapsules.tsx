@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 
-import { css } from '../styled-system/css';
+import { css, cx } from '../styled-system/css';
 import { type JsonValue } from '../utils/extractJson';
 import { type FC, memo } from 'react';
 
@@ -25,6 +25,8 @@ const capsuleStyles = css({
   padding: '0 5px',
 });
 
+const capsuleClass = 'summary-capsule';
+
 const keyStyles = css({
   color: 'text.muted',
 });
@@ -32,6 +34,8 @@ const keyStyles = css({
 const valueStyles = css({
   color: 'text.link',
 });
+
+const valueClass = 'summary-capsule-value';
 
 const getValueAtPath = (object: JsonValue, path: string): unknown => {
   const segments = path.split('.');
@@ -96,11 +100,11 @@ export const SummaryCapsules: FC<SummaryCapsulesProps> = memo(
       <div className={containerStyles}>
         {capsules.map((capsule) => (
           <span
-            className={capsuleStyles}
+            className={cx(capsuleStyles, capsuleClass)}
             key={capsule.path}
           >
             <span className={keyStyles}>{capsule.key}:</span>{' '}
-            <span className={valueStyles}>{capsule.value}</span>
+            <span className={cx(valueStyles, valueClass)}>{capsule.value}</span>
           </span>
         ))}
       </div>

@@ -50,9 +50,9 @@ test.describe('long lines', () => {
       // Should be exactly one line
       await expect(page.locator('.line')).toHaveCount(1);
 
-      // Should contain the JSON content
+      // Should contain the JSON content (JsonView renders keys without quotes)
       const lineContent = await page.locator('.line').first().textContent();
-      expect(lineContent).toContain('"key"');
+      expect(lineContent).toContain('key:');
       expect(lineContent).toContain('"value"');
     });
   });
@@ -73,10 +73,10 @@ test.describe('long lines', () => {
       // Should be exactly one line
       await expect(page.locator('.line')).toHaveCount(1);
 
-      // Should contain first and last keys
+      // Should contain first and last keys (JsonView renders keys without quotes)
       const lineContent = await page.locator('.line').first().textContent();
-      expect(lineContent).toContain('"key0"');
-      expect(lineContent).toContain('"key99"');
+      expect(lineContent).toContain('key0:');
+      expect(lineContent).toContain('key99:');
     });
   });
 
@@ -104,9 +104,9 @@ test.describe('long lines', () => {
       // Should be exactly one line
       await expect(page.locator('.line')).toHaveCount(1);
 
-      // Should contain nested content
+      // Should contain nested content (JsonView renders keys without quotes)
       const lineContent = await page.locator('.line').first().textContent();
-      expect(lineContent).toContain('"deep"');
+      expect(lineContent).toContain('deep:');
       expect(lineContent).toContain('"value"');
     });
   });
@@ -197,10 +197,10 @@ test.describe('long lines', () => {
       // Should be exactly one line (newlines within the message should not split it)
       await expect(page.locator('.line')).toHaveCount(1);
 
-      // Should contain both key and num
+      // Should contain both key and num (JsonView renders keys without quotes)
       const lineContent = await page.locator('.line').first().textContent();
-      expect(lineContent).toContain('"key"');
-      expect(lineContent).toContain('"num"');
+      expect(lineContent).toContain('key:');
+      expect(lineContent).toContain('num:');
     });
   });
 
