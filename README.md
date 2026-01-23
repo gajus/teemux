@@ -28,6 +28,12 @@
 
 ---
 
+## Demo
+
+```bash
+npx teemux -- curl -N https://teemux.com/random-logs
+```
+
 ## Motivation
 
 * Needed a simple way to browse logs aggregated across multiple processes.
