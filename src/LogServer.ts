@@ -489,6 +489,17 @@ export class LogServer {
     .json-number { color: #b5cea8; }
     .json-bool { color: #569cd6; }
     .json-null { color: #569cd6; }
+    .summary-capsule {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      padding: 0 5px;
+      margin-right: 6px;
+      font-size: 11px;
+    }
+    .summary-capsule-key { color: #888; }
+    .summary-capsule-value { color: #4fc1ff; }
     #tail-btn {
       position: fixed;
       bottom: 20px;
@@ -549,6 +560,7 @@ export class LogServer {
     <label>Include: <input type="text" id="include" placeholder="error*,warn* (OR, * = wildcard)"></label>
     <label>Exclude: <input type="text" id="exclude" placeholder="health*,debug (OR, * = wildcard)"></label>
     <label>Highlight: <input type="text" id="highlight" placeholder="term1,term2"></label>
+    <label>Summary: <input type="text" id="summary" placeholder="level,message,error.code"></label>
     <button id="clear-btn" title="Clear all logs (Cmd+K)">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
       Clear
@@ -564,14 +576,16 @@ export class LogServer {
     const includeInput = document.getElementById('include');
     const excludeInput = document.getElementById('exclude');
     const highlightInput = document.getElementById('highlight');
+    const summaryInput = document.getElementById('summary');
     const tailBtn = document.getElementById('tail-btn');
     const clearBtn = document.getElementById('clear-btn');
     const params = new URLSearchParams(window.location.search);
     const tailSize = Math.min(${this.tailSize}, 1000);
-    
+
     includeInput.value = params.get('include') || '';
     excludeInput.value = params.get('exclude') || '';
     highlightInput.value = params.get('highlight') || '';
+    summaryInput.value = params.get('summary') || '';
     
     let tailing = true;
     let pinnedIds = new Set();
@@ -623,26 +637,75 @@ export class LogServer {
       }
       return result;
     };
+
+    const escapeHtml = (text) => text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    const tryParseJsonContent = (text) => {
+      const prefixMatch = /^\\[[\\w-]+\\]\\s*/u.exec(text);
+      const content = prefixMatch ? text.slice(prefixMatch[0].length).trim() : text.trim();
+      if (!content.startsWith('{') && !content.startsWith('[')) return null;
+      try { return JSON.parse(content); } catch { return null; }
+    };
+
+    const buildSummaryCapsules = (raw, summaryPaths) => {
+      if (!summaryPaths.length) return '';
+      const json = tryParseJsonContent(raw);
+      if (!json) return '';
+
+      const capsules = [];
+      for (const path of summaryPaths) {
+        const segments = path.split('.');
+        let current = json;
+        for (const segment of segments) {
+          if (current && typeof current === 'object' && segment in current) {
+            current = current[segment];
+          } else { current = undefined; break; }
+        }
+        if (current !== undefined && current !== null) {
+          const key = segments[segments.length - 1];
+          let value = typeof current === 'object' ? JSON.stringify(current) : String(current);
+          if (value.length > 50) value = value.slice(0, 47) + '...';
+          capsules.push(
+            '<span class="summary-capsule">' +
+            '<span class="summary-capsule-key">' + escapeHtml(key) + ':</span> ' +
+            '<span class="summary-capsule-value">' + escapeHtml(value) + '</span></span>'
+          );
+        }
+      }
+      return capsules.join('');
+    };
+
+    const insertCapsulesAfterPrefix = (html, capsules) => {
+      if (!capsules) return html;
+      // Match the source tag prefix: <span style="...">[name]</span> (with optional [ERR] after)
+      const prefixMatch = /^(<span[^>]*>\\[[\\w-]+\\]<\\/span>\\s*(?:<span[^>]*>\\[ERR\\]<\\/span>\\s*)?)/u.exec(html);
+      if (prefixMatch) {
+        return prefixMatch[1] + capsules + html.slice(prefixMatch[0].length);
+      }
+      return capsules + html;
+    };
     
     const applyFiltersLocal = () => {
       const includes = includeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const excludes = excludeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const highlights = highlightInput.value.split(',').map(s => s.trim()).filter(Boolean);
-      
+      const summaryPaths = summaryInput.value.split(',').map(s => s.trim()).filter(Boolean);
+
       document.querySelectorAll('.line').forEach(line => {
         const id = line.dataset.id;
         const isPinned = pinnedIds.has(id);
         const text = line.dataset.raw;
         const matches = matchesFilters(text, includes, excludes);
         line.style.display = (matches || isPinned) ? '' : 'none';
-        
-        // Re-apply highlighting
+
+        // Re-apply highlighting and capsules
         const contentEl = line.querySelector('.line-content');
         if (contentEl) {
           let html = line.dataset.html;
           html = highlightTerms(html, includes, 'filter');
           html = highlightTerms(html, highlights);
-          contentEl.innerHTML = html;
+          const capsules = buildSummaryCapsules(text, summaryPaths);
+          contentEl.innerHTML = insertCapsulesAfterPrefix(html, capsules);
         }
       });
     };
@@ -660,6 +723,7 @@ export class LogServer {
       if (includeInput.value) newParams.set('include', includeInput.value);
       if (excludeInput.value) newParams.set('exclude', excludeInput.value);
       if (highlightInput.value) newParams.set('highlight', highlightInput.value);
+      if (summaryInput.value) newParams.set('summary', summaryInput.value);
       const newUrl = newParams.toString() ? '?' + newParams.toString() : window.location.pathname;
       history.replaceState(null, '', newUrl);
       
@@ -709,6 +773,7 @@ export class LogServer {
         });
         
         // Add search results
+        const summaryPaths = summaryInput.value.split(',').map(s => s.trim()).filter(Boolean);
         for (const item of results) {
           const id = 'line-' + (lineCounter++);
           const div = document.createElement('div');
@@ -716,11 +781,13 @@ export class LogServer {
           div.dataset.id = id;
           div.dataset.raw = item.raw;
           div.dataset.html = item.html;
-          
+
           let displayHtml = item.html;
           displayHtml = highlightTerms(displayHtml, includes, 'filter');
           displayHtml = highlightTerms(displayHtml, highlights);
-          
+          const capsules = buildSummaryCapsules(item.raw, summaryPaths);
+          displayHtml = insertCapsulesAfterPrefix(displayHtml, capsules);
+
           div.innerHTML = '<span class="line-content">' + displayHtml + '</span><span class="pin-btn" title="Pin">' + pinIcon + '</span>';
           
           // Pin button handler
@@ -780,17 +847,20 @@ export class LogServer {
       const includes = includeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const excludes = excludeInput.value.split(',').map(s => s.trim()).filter(Boolean);
       const highlights = highlightInput.value.split(',').map(s => s.trim()).filter(Boolean);
-      
+      const summaryPaths = summaryInput.value.split(',').map(s => s.trim()).filter(Boolean);
+
       const div = document.createElement('div');
       div.className = 'line';
       div.dataset.id = id;
       div.dataset.raw = raw;
       div.dataset.html = html;
-      
+
       let displayHtml = html;
       displayHtml = highlightTerms(displayHtml, includes, 'filter');
       displayHtml = highlightTerms(displayHtml, highlights);
-      
+      const capsules = buildSummaryCapsules(raw, summaryPaths);
+      displayHtml = insertCapsulesAfterPrefix(displayHtml, capsules);
+
       div.innerHTML = '<span class="line-content">' + displayHtml + '</span><span class="pin-btn" title="Pin">' + pinIcon + '</span>';
       
       // Pin button handler
@@ -851,6 +921,7 @@ export class LogServer {
     includeInput.addEventListener('input', () => debounce(applyFilters, 300));
     excludeInput.addEventListener('input', () => debounce(applyFilters, 300));
     highlightInput.addEventListener('input', () => debounce(applyFilters, 150));
+    summaryInput.addEventListener('input', () => debounce(applyFilters, 150));
   </script>
 `;
   }
@@ -860,7 +931,10 @@ export class LogServer {
     html = highlightJson(html);
     html = linkifyUrls(html);
     const raw = stripAnsi(line);
-    return `<script>addLine(${JSON.stringify(html)}, ${JSON.stringify(raw)})</script>\n`;
+    // Escape </ to prevent closing script tag in HTML parser
+    const safeHtml = JSON.stringify(html).replaceAll('</', '<\\/');
+    const safeRaw = JSON.stringify(raw).replaceAll('</', '<\\/');
+    return `<script>addLine(${safeHtml}, ${safeRaw})</script>\n`;
   }
 
   private sendToClients(forWeb: string, timestamp: number): void {
