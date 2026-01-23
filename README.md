@@ -55,32 +55,62 @@ curl http://127.0.0.1:8336/
 
 Plain text stream of all logs.
 
-### AGENTS.md
+### MCP Server for AI Agents
 
-If you want your coding agent to see the logs, simply add instructions to AGENTS.md to view the logs by running `curl http://127.0.0.1:8336/`. Example:
+teemux includes a built-in [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that enables AI agents to programmatically access logs in your development environment. This makes it easy for coding assistants like Claude, Cursor, or other AI tools to inspect application logs, search for errors, and understand what's happening in your running processes.
 
-````md
-## Viewing Logs
+The MCP server runs on the same port as the HTTP server at `/mcp` and provides these tools:
 
-All process logs are aggregated at http://127.0.0.1:8336/
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `get_logs` | Get recent logs from buffer | `limit?`, `include?`, `exclude?` |
+| `search_logs` | Search logs with patterns | `limit?`, `include?`, `exclude?` |
+| `clear_logs` | Clear the log buffer | none |
+| `get_process_names` | List all process names that have logged | none |
+
+#### Configuring your AI agent
+
+Add teemux as an MCP server in your AI tool's configuration. For Claude Code, add to your MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "teemux": {
+      "url": "http://127.0.0.1:8336/mcp"
+    }
+  }
+}
+```
+
+Once configured, your AI agent can:
+- **Inspect logs** when debugging issues ("What errors are in the logs?")
+- **Search for specific events** ("Find all database connection errors")
+- **Monitor processes** ("What processes are currently running?")
+- **Clear logs** to start fresh when testing
+
+#### Example MCP usage
 
 ```bash
-# View all recent logs
-curl http://127.0.0.1:8336/
+# Initialize session
+curl -X POST http://127.0.0.1:8336/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}},"id":1}'
 
-# View logs from a specific process
-curl "http://127.0.0.1:8336/?include=api"
+# List available tools (use session ID from response above)
+curl -X POST http://127.0.0.1:8336/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: <session-id>" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}'
 
-# View only errors (using wildcard for case variations)
-curl "http://127.0.0.1:8336/?include=*error*,*Error*,*ERROR*"
-
-# View logs from api OR worker
-curl "http://127.0.0.1:8336/?include=api,worker"
-
-# Exclude noisy logs (using wildcard)
-curl "http://127.0.0.1:8336/?exclude=health*,DEBUG"
+# Get recent logs
+curl -X POST http://127.0.0.1:8336/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: <session-id>" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_logs","arguments":{"limit":50}},"id":3}'
 ```
-````
 
 ### Filtering Logs
 

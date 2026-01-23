@@ -1,3 +1,4 @@
+import { McpHandler } from './McpHandler.js';
 import { highlightJson } from './utils/highlightJson.js';
 import { linkifyUrls } from './utils/linkifyUrls.js';
 import { matchesFilters } from './utils/matchesFilters.js';
@@ -82,6 +83,8 @@ export class LogServer {
 
   private colorMap = new Map<string, string>();
 
+  private mcpHandler: McpHandler;
+
   private port: number;
 
   private server: http.Server | null = null;
@@ -91,6 +94,10 @@ export class LogServer {
   constructor(port: number, tailSize: number = 10_000) {
     this.port = port;
     this.tailSize = tailSize;
+    this.mcpHandler = new McpHandler({
+      clearLogs: () => this.clearLogs(),
+      getBuffer: () => this.buffer,
+    });
   }
 
   clearLogs(): void {
@@ -171,6 +178,12 @@ export class LogServer {
             'Content-Type': 'application/json; charset=utf-8',
           });
           response.end(JSON.stringify(results));
+          return;
+        }
+
+        // Handle MCP endpoint (GET for SSE stream)
+        if (request.method === 'GET' && request.url?.startsWith('/mcp')) {
+          void this.mcpHandler.handleRequest(request, response, '');
           return;
         }
 
@@ -331,6 +344,12 @@ export class LogServer {
 
             // Stop the server after responding
             void this.stop();
+          } else if (
+            (request.method === 'POST' || request.method === 'DELETE') &&
+            request.url?.startsWith('/mcp')
+          ) {
+            // Handle MCP POST and DELETE requests
+            void this.mcpHandler.handleRequest(request, response, body);
           } else {
             response.writeHead(200);
             response.end();

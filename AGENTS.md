@@ -165,7 +165,7 @@ test('example test', async ({ page }) => {
 
 - `e2e/filtering.spec.ts` - Filter/exclude functionality (6 tests)
 - `e2e/highlight.spec.ts` - Highlighting feature (5 tests)
-- `e2e/json-highlight.spec.ts` - JSON syntax highlighting (8 tests)
+- `e2e/jsonHighlight.spec.ts` - JSON syntax highlighting (8 tests)
 - `e2e/links.spec.ts` - URL linkification (6 tests)
 - `e2e/pinning.spec.ts` - Pin functionality (4 tests)
 

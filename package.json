@@ -31,10 +31,12 @@
     ]
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "ansi-to-html": "^0.7.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "yargs": "^18.0.0"
+    "yargs": "^18.0.0",
+    "zod": "^3.25.76"
   },
   "description": "Aggregate logs from multiple processes in a single view.",
   "devDependencies": {
