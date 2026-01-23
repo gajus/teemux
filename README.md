@@ -20,7 +20,9 @@
 
 <p align="center">
   <img src="./preview.gif" alt="teemux demo" width="600" />
+</p>
 
+<p align="center">
   <a href="https://teemux.com/">View a demo of Teemux in action</a>
 </p>
 
