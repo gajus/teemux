@@ -19,7 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://teemux.com/">View demo</a>
+  <img src="./demo.gif" alt="teemux demo" width="600" />
+
+  <a href="https://teemux.com/">View walkthrough</a>
 </p>
 
 ---
