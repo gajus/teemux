@@ -13,7 +13,6 @@ const containerStyles = css({
   display: 'flex',
   flexWrap: 'wrap',
   gap: '6px',
-  marginBottom: '4px',
 });
 
 const capsuleStyles = css({

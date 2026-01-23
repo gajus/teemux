@@ -28,6 +28,23 @@ for (const bundlePath of bundlePaths) {
   }
 }
 
+// Read the favicon at module load time
+let faviconBase64: string = '';
+const faviconPaths = [
+  join(import.meta.dirname, 'client/favicon.ico'), // dist/client/favicon.ico when running from dist/
+  join(import.meta.dirname, '../dist/client/favicon.ico'), // dist/client/favicon.ico when running from src/
+];
+
+for (const faviconPath of faviconPaths) {
+  try {
+    const faviconBuffer = readFileSync(faviconPath);
+    faviconBase64 = faviconBuffer.toString('base64');
+    break;
+  } catch {
+    // Try next path
+  }
+}
+
 const COLORS = [
   '\u001B[36m',
   '\u001B[33m',
@@ -424,11 +441,15 @@ export class LogServer {
   }
 
   private getHtmlHeader(): string {
+    const faviconLink = faviconBase64
+      ? `<link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,${faviconBase64}">`
+      : '';
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>teemux</title>
+  ${faviconLink}
 </head>
 <body>
   <div id="root"></div>

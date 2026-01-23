@@ -90,7 +90,7 @@
     "url": "https://github.com/gajus/teemux"
   },
   "scripts": {
-    "build": "npm run build:client && tsdown",
+    "build": "npm run build:client && tsdown && cp src/client/favicon.ico dist/client/",
     "build:client": "panda --cwd src/client && vite build --config src/client/vite.config.ts",
     "dev": "npm run build:client && tsdown --watch",
     "lint": "npm run lint:tsc && npm run lint:eslint && npm run lint:cspell",

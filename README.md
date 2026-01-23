@@ -47,7 +47,8 @@ The first process starts a local server on port 8336. Others connect automatical
 |--------|-------|---------|-------------|
 | `--name` | `-n` | command name | Identifier for this process in logs |
 | `--port` | `-p` | 8336 | Port for the log aggregation server |
-| `--tail` | `-t` | 1000 | Number of log lines to keep in buffer |
+| `--buffer` | `-b` | 10000 | Number of log lines to keep in server buffer |
+| `--force-leader` | `-f` | false | Force this process to become the leader, replacing any existing leader |
 
 All options can also be set via environment variables with `TEEMUX_` prefix:
 
@@ -233,9 +234,12 @@ The flags:
 ## Developing
 
 ```bash
-# Terminal 1
-cd src/client && pnpm run dev
+# Install dependencies
+npm install
 
-# Terminal 2
-node dist/teemux.js -p 1339 -- node scripts/fake-logs.js
+# Build and watch for changes
+npm run dev
+
+# In another terminal, run with fake logs
+node dist/teemux.js -- node scripts/fake-logs.js
 ```
