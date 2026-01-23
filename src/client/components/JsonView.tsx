@@ -248,17 +248,43 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
           return '[]' as unknown as ReactElement;
         }
 
-        return (
-          <div className={cx(nodeStyles, !expanded && nodeNotExpandedStyles)}>
-            <span className={expanded ? bracketExpandedStyles : undefined}>
+        if (expanded) {
+          return (
+            <>
               [
-            </span>
+              <div className={nodeStyles}>
+                {entries.map((value, index) => {
+                  const itemPath = `${path}.${index}`;
+
+                  return (
+                    <div key={itemPath}>
+                      {renderJsonValue({
+                        activePath,
+                        entries: value,
+                        expanded,
+                        hidePaths,
+                        onActivePathChange,
+                        path: itemPath,
+                        searchQuery,
+                      })}
+                    </div>
+                  );
+                })}
+                <span className={bracketExpandedStyles}>]</span>
+              </div>
+            </>
+          );
+        }
+
+        return (
+          <div className={nodeNotExpandedStyles}>
+            [
             {entries.map((value, index) => {
               const itemPath = `${path}.${index}`;
 
               return (
                 <Fragment key={itemPath}>
-                  <div className={cx(!expanded && pairNotExpandedStyles)}>
+                  <span className={pairNotExpandedStyles}>
                     {renderJsonValue({
                       activePath,
                       entries: value,
@@ -268,16 +294,14 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
                       path: itemPath,
                       searchQuery,
                     })}
-                  </div>
-                  {!expanded && index < entries.length - 1 && (
+                  </span>
+                  {index < entries.length - 1 && (
                     <span className={separatorStyles}> </span>
                   )}
                 </Fragment>
               );
             })}
-            <span className={expanded ? bracketExpandedStyles : undefined}>
-              ]
-            </span>
+            ]
           </div>
         );
       }
@@ -294,18 +318,56 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
           (key) => !hidePaths.includes(`${path}.${key}`),
         );
 
-        return (
-          <div className={cx(nodeStyles, !expanded && nodeNotExpandedStyles)}>
-            <span className={expanded ? bracketExpandedStyles : undefined}>
+        if (expanded) {
+          return (
+            <>
               {'{'}
-            </span>
+              <div className={nodeStyles}>
+                {visibleKeys.map((key) => {
+                  const nextPath = `${path}.${key}`;
+                  const isActive = activePath?.startsWith(nextPath);
+
+                  return (
+                    <div key={nextPath}>
+                      <span
+                        className={cx(
+                          propertyNameStyles,
+                          isActive && propertyNameActiveStyles,
+                        )}
+                        onMouseEnter={() => onActivePathChange(nextPath)}
+                        onMouseLeave={() => onActivePathChange(null)}
+                      >
+                        {key}
+                      </span>
+                      <span className={colonStyles}>:</span>
+                      {renderJsonValue({
+                        activePath,
+                        entries: entries[key],
+                        expanded,
+                        hidePaths,
+                        onActivePathChange,
+                        path: nextPath,
+                        searchQuery,
+                      })}
+                    </div>
+                  );
+                })}
+                <span className={bracketExpandedStyles}>{'}'}</span>
+              </div>
+            </>
+          );
+        }
+
+        return (
+          <div className={nodeNotExpandedStyles}>
+            {'{'}
             {visibleKeys.map((key, index) => {
               const nextPath = `${path}.${key}`;
               const isActive = activePath?.startsWith(nextPath);
 
               return (
                 <Fragment key={nextPath}>
-                  <div className={cx(!expanded && pairNotExpandedStyles)}>
+                  <span className={pairNotExpandedStyles}>
                     <span
                       className={cx(
                         propertyNameStyles,
@@ -326,16 +388,14 @@ function renderJsonValue(props: InternalJsonViewProps): null | ReactElement {
                       path: nextPath,
                       searchQuery,
                     })}
-                  </div>
-                  {!expanded && index < visibleKeys.length - 1 && (
+                  </span>
+                  {index < visibleKeys.length - 1 && (
                     <span className={separatorStyles}> </span>
                   )}
                 </Fragment>
               );
             })}
-            <span className={expanded ? bracketExpandedStyles : undefined}>
-              {'}'}
-            </span>
+            {'}'}
           </div>
         );
       }
