@@ -18,6 +18,9 @@
     "target": "es2022",
     "useUnknownInCatchVariables": false
   },
+  "exclude": [
+    "src/client"
+  ],
   "include": [
     "src",
     "e2e",

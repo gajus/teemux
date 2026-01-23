@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2023"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "useUnknownInCatchVariables": false
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx"
+  ]
+}
