@@ -23,7 +23,7 @@
 ## Motivation
 
 * Needed a simple way to browse logs aggregated across multiple processes.
-* Needed a simple way to [give agents a unified view of all the logs](#agentsmd).
+* Needed a simple way to give agents a unified view of all the logs
 
 ## Install
 
