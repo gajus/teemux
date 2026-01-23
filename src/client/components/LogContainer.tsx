@@ -34,6 +34,7 @@ const headerStyles = css({
   flexShrink: 0,
   fontSize: 'xs',
   height: '24px',
+  paddingLeft: '16px',
 });
 
 const headerLeftColumnStyles = css({
@@ -45,7 +46,7 @@ const headerLeftColumnStyles = css({
   flexShrink: 0,
   height: '100%',
   justifyContent: 'space-between',
-  padding: '0 8px',
+  padding: '0 8px 0 0',
   position: 'relative',
   userSelect: 'none',
 });
@@ -153,7 +154,7 @@ export const LogContainer = forwardRef<HTMLDivElement, LogContainerProps>(
         <div className={headerStyles}>
           <div
             className={headerLeftColumnStyles}
-            style={{ width: columnWidth + 4 }}
+            style={{ width: columnWidth }}
           >
             <span className={headerLabelStyles}>Source</span>
             <div

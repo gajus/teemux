@@ -72,7 +72,6 @@ const rowStyles = css({
   '&:hover .pin-btn': {
     opacity: 0.5,
   },
-  borderRadius: 'sm',
   color: 'text.primary',
   fontFamily: 'mono',
   fontSize: 'sm',
@@ -108,7 +107,8 @@ const leftColumnStyles = css({
   flexShrink: 0,
   gap: '4px',
   overflow: 'hidden',
-  padding: '2px 8px',
+  padding: '2px 8px 2px 0',
+  userSelect: 'none',
 });
 
 const leftColumnClickableStyles = css({
@@ -185,10 +185,7 @@ const jsonExpandedAreaStyles = css({
     background: 'json.selectionBg',
     color: 'text.white',
   },
-  borderTop: '1px solid',
-  borderTopColor: 'border.primary',
   marginTop: '4px',
-  paddingTop: '4px',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-all',
 });
@@ -216,6 +213,36 @@ const extractData = (line: LogLineType): ExtractedData => {
   };
 };
 
+// Check if any summary paths match the JSON data
+const getValueAtPath = (object: JsonValue, path: string): unknown => {
+  const segments = path.split('.');
+  let current: unknown = object;
+
+  for (const segment of segments) {
+    if (current && typeof current === 'object' && segment in current) {
+      current = (current as Record<string, unknown>)[segment];
+    } else {
+      return undefined;
+    }
+  }
+
+  return current;
+};
+
+const hasMatchingSummaryPaths = (
+  json: JsonValue | null,
+  summaryPaths: string[],
+): boolean => {
+  if (!json || typeof json !== 'object' || summaryPaths.length === 0) {
+    return false;
+  }
+
+  return summaryPaths.some((path) => {
+    const value = getValueAtPath(json, path);
+    return value !== undefined && value !== null;
+  });
+};
+
 // Build search regex from highlight terms
 const buildSearchRegex = (highlights: string[]): RegExp | undefined => {
   const terms = highlights.filter(Boolean);
@@ -239,7 +266,7 @@ export const LogRow: FC<LogRowProps> = memo(
 
     const { color, json, processName } = extractData(line);
     const isJsonLine = json !== null;
-    const hasSummary = summaryPaths.length > 0;
+    const hasSummary = hasMatchingSummaryPaths(json, summaryPaths);
     const searchQuery = buildSearchRegex(highlights);
 
     const handleToggleExpanded = useCallback(
@@ -378,20 +405,22 @@ export const LogRow: FC<LogRowProps> = memo(
           <div className={rightColumnStyles}>
             {expanded ? (
               <>
-                {hasSummary && (
-                  <div className={contentRowStyles}>
+                <div className={contentRowStyles}>
+                  {hasSummary ? (
                     <div className={summaryOnlyStyles}>
                       {renderSummaryCapsules()}
                     </div>
-                    <span
-                      className={cx('pin-btn', pinButtonStyles)}
-                      onClick={handlePinClick}
-                      title="Pin"
-                    >
-                      <PinIcon />
-                    </span>
-                  </div>
-                )}
+                  ) : (
+                    <div className={contentStyles} />
+                  )}
+                  <span
+                    className={cx('pin-btn', pinButtonStyles)}
+                    onClick={handlePinClick}
+                    title="Pin"
+                  >
+                    <PinIcon />
+                  </span>
+                </div>
                 <div
                   className={hasSummary ? jsonExpandedAreaStyles : undefined}
                 >

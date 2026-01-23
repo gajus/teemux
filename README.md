@@ -181,3 +181,13 @@ teemux --name db -- docker run --rm my-database
 The flags:
 - `-i` = keep stdin open (for interactive input) ✅
 - `-t` = allocate pseudo-TTY (adds terminal formatting) ❌
+
+## Developing
+
+```bash
+# Terminal 1
+cd src/client && pnpm run dev
+
+# Terminal 2
+node dist/teemux.js -p 1339 -- node scripts/fake-logs.js
+```
