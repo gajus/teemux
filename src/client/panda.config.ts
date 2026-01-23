@@ -6,6 +6,10 @@ export default defineConfig({
 
   // Global CSS
   globalCss: {
+    '#root': {
+      display: 'flex',
+      flexDirection: 'column',
+    },
     '*': {
       boxSizing: 'border-box',
     },
@@ -57,7 +61,7 @@ export default defineConfig({
       fontSize: '12px',
       lineHeight: '1.3',
     },
-    'html, body': {
+    'html, body, #root': {
       height: '100%',
       margin: 0,
       overflow: 'hidden',
@@ -65,6 +69,10 @@ export default defineConfig({
     mark: {
       '&.filter': {
         background: '#264f00',
+      },
+      '&.json-mark': {
+        background: 'rgb(84 168 255 / 45%)',
+        color: '#fff',
       },
       background: '#623800',
       borderRadius: '2px',
@@ -101,9 +109,17 @@ export default defineConfig({
         'border.hover': { value: '#505050' },
         'border.primary': { value: '#3c3c3c' },
         'json.bool': { value: '#569cd6' },
+        'json.boolean': { value: '#9980ff' },
         'json.key': { value: '#9cdcfe' },
-        'json.number': { value: '#b5cea8' },
-        'json.string': { value: '#ce9178' },
+        'json.markBg': { value: 'rgb(84 168 255 / 45%)' },
+        'json.null': { value: '#a1a1a1' },
+        'json.number': { value: '#a1f7b6' },
+        'json.propActive': { value: '#ffbc17' },
+        'json.selectionBg': { value: 'rgb(0 120 255 / 50%)' },
+        'json.string': { value: '#fff' },
+        'json.valueHoverBg': { value: 'rgba(255, 188, 23, 0.2)' },
+        'row.expandedBg': { value: '#0d131a' },
+        'row.focusedOutline': { value: '#ffc300' },
         'text.link': { value: '#4fc1ff' },
         'text.muted': { value: '#888' },
         'text.primary': { value: '#d4d4d4' },

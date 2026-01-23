@@ -1,6 +1,7 @@
 import { FilterBar } from './components/FilterBar';
 import { LogContainer } from './components/LogContainer';
 import { TailButton } from './components/TailButton';
+import { ColumnWidthProvider } from './contexts/ColumnWidthContext';
 import { useLogState } from './hooks/useLogState';
 import { type PendingLine } from './types';
 import { parseFilterValue } from './utils/filtering';
@@ -168,7 +169,7 @@ export const App = () => {
   const summaryPaths = parseFilterValue(summaryFilter);
 
   return (
-    <>
+    <ColumnWidthProvider>
       <FilterBar
         clearActive={clearActive}
         excludeFilter={excludeFilter}
@@ -194,6 +195,6 @@ export const App = () => {
         onClick={handleTailClick}
         visible={!state.tailing}
       />
-    </>
+    </ColumnWidthProvider>
   );
 };
