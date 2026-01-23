@@ -44,6 +44,7 @@ jobs:
       - run: pnpm install
       - run: pnpm exec playwright install --with-deps
       - run: pnpm run test:vitest
+      - run: pnpm run build:client
       - run: pnpm run test:playwright
         timeout-minutes: 2
       - run: pnpm run build
