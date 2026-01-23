@@ -81,15 +81,6 @@ Generate controlled JSON to test parsing/highlighting:
 ./dist/teemux.js -p 9900 -- bash -c 'echo "{\"key\":\"value\",\"num\":42,\"bool\":true}" && sleep 10'
 ```
 
-### 5. Reading Background Process Output
-
-Terminal output is saved to files that can be inspected:
-
-```bash
-# Check terminal state
-cat /path/to/terminals/1.txt
-```
-
 ## Common Pitfalls
 
 ### Timing Issues
@@ -123,7 +114,10 @@ Tests are co-located with source files:
 - `src/utils/highlightJson.test.ts` - JSON syntax highlighting (21 tests)
 - `src/utils/linkifyUrls.test.ts` - URL linkification (20 tests)
 - `src/utils/stripAnsi.test.ts` - ANSI code stripping (14 tests)
-- `src/utils/matchesFilters.test.ts` - Filter matching logic (26 tests)
+- `src/utils/matchesFilters.test.ts` - Filter matching logic (36 tests)
+- `src/utils/extractJsonFields.test.ts` - JSON field extraction (20 tests)
+- `src/LogServer.test.ts` - Log server functionality (4 tests)
+- `src/McpHandler.test.ts` - MCP protocol handler (12 tests)
 
 ## Playwright Tests (E2E)
 
@@ -145,15 +139,17 @@ test('example test', async ({ page }) => {
     // Inject logs directly
     await ctx.injectLog('app', 'Hello world');
     await ctx.injectLog('api', '{"status":"ok"}');
-    
+
     // Inject events
     await ctx.injectEvent('app', 'start', 12345);
     await ctx.injectEvent('app', 'exit');
-    
+
+    // Clear all logs
+    await ctx.clearLogs();
+
     // Navigate to the teemux URL
     await page.goto(ctx.url);
-    await page.goto(`${ctx.url}?query=error`);
-    
+
     // Port is auto-assigned when not specified
     console.log(`Server running on port ${ctx.port}`);
   });
@@ -163,11 +159,14 @@ test('example test', async ({ page }) => {
 
 ### Test Files
 
-- `e2e/filtering.spec.ts` - Filter/exclude functionality (6 tests)
+- `e2e/clear.spec.ts` - Log clearing functionality (7 tests)
+- `e2e/filtering.spec.ts` - Filter/exclude functionality (7 tests)
 - `e2e/highlight.spec.ts` - Highlighting feature (5 tests)
 - `e2e/jsonHighlight.spec.ts` - JSON syntax highlighting (8 tests)
 - `e2e/links.spec.ts` - URL linkification (6 tests)
+- `e2e/longLines.spec.ts` - Long line handling (19 tests)
 - `e2e/pinning.spec.ts` - Pin functionality (4 tests)
+- `e2e/summary.spec.ts` - Summary view functionality (11 tests)
 
 ### Writing New Tests
 
@@ -193,6 +192,9 @@ describe('myFunction', () => {
 | `linkifyUrls.ts` | http/https/file URLs, trailing punctuation, existing href handling |
 | `stripAnsi.ts` | Color codes, bold/dim, 256 colors, nested formatting |
 | `matchesFilters.ts` | AND/OR logic, case insensitivity, ANSI handling, edge cases |
+| `extractJsonFields.ts` | JSON field extraction from log lines |
+| `LogServer.ts` | Server lifecycle, log broadcasting, client connections |
+| `McpHandler.ts` | MCP protocol requests, session management, tools/resources |
 
 ## Code Quality Checks
 
@@ -260,9 +262,9 @@ For browser-side features (filtering, pinning):
 
 ### Server Components
 
-- `LogServer`: Aggregates logs, serves HTTP streaming
-- `LogClient`: Sends logs to server
-- Both components handle their own output (client prints locally, server broadcasts)
+- `LogServer`: Aggregates logs, serves HTTP streaming, handles React client
+- `McpHandler`: Model Context Protocol handler for AI tool integration
+- Both components handle their own output (server broadcasts to connected clients)
 
 ### Key Processing Pipeline
 
@@ -270,14 +272,16 @@ For browser-side features (filtering, pinning):
 2. → `ansi-to-html` conversion
 3. → JSON syntax highlighting (if pure JSON)
 4. → URL linkification
-5. → JavaScript string escaping
-6. → Injected into browser DOM
+5. → Streamed to React client via SSE
+6. → Rendered with filtering/highlighting in browser
 
 ### Client-Side Features
 
-Features running in browser JavaScript:
-- Filtering (query, exclude)
-- Highlighting
-- Pinning
+Features running in the React client (built with Vite and PandaCSS):
+- Filtering (include, exclude)
+- Highlighting (highlight matches)
+- Summary mode (JSON field extraction)
+- Pinning (persist important lines)
+- Clear logs (Cmd/Ctrl+K shortcut)
 - Buffer trimming
 - Auto-scroll (tailing)
