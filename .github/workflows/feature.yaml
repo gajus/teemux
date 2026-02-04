@@ -1,6 +1,5 @@
 jobs:
   lint:
-    environment: release
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +22,6 @@ jobs:
       - run: pnpm run lint:cspell
     timeout-minutes: 10
   test:
-    environment: release
     name: Test
     needs:
       - lint
